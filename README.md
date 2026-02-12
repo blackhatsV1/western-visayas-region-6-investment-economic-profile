@@ -1,0 +1,115 @@
+# Western Visayas Industry Profile - Investment Funnel
+
+A premium, data-driven web application showcasing the investment potential and economic profile of Western Visayas (Region VI), Philippines. Built with Laravel, Tailwind CSS, and Alpine.js.
+
+## 🚀 Getting Started
+
+You can set up this project using either **Docker (Recommended)** or a **Manual Local Setup**.
+
+---
+
+### Option 1: Docker Setup (Fastest)
+
+This project uses [Laravel Sail](https://laravel.com/docs/sail), a light-weight command-line interface for interacting with the project's Docker configuration.
+
+#### Prerequisites
+- [Docker Desktop](https://www.docker.com/products/docker-desktop) installed and running.
+
+#### Setup Steps
+1. **Clone the repository**:
+   ```bash
+   git clone <repository-url>
+   cd new-app
+   ```
+
+2. **Install dependencies**:
+   ```bash
+   docker run --rm \
+       -u "$(id -u):$(id -g)" \
+       -v "$(pwd):/var/www/html" \
+       -w /var/www/html \
+       laravelsail/php82-composer:latest \
+       composer install --ignore-platform-reqs
+   ```
+
+3. **Configure Environment**:
+   ```bash
+   cp .env.example .env
+   ```
+   *Note: Sail automatically configures the database connection for you.*
+
+4. **Start the containers**:
+   ```bash
+   ./vendor/bin/sail up -d
+   ```
+
+5. **Initialize Application**:
+   ```bash
+   ./vendor/bin/sail artisan key:generate
+   ./vendor/bin/sail artisan migrate --seed
+   ./vendor/bin/sail npm install
+   ./vendor/bin/sail npm run build
+   ```
+
+The app will be available at [http://localhost](http://localhost).
+
+---
+
+### Option 2: Manual Local Setup
+
+Use this if you prefer running PHP and MySQL directly on your host machine.
+
+#### Prerequisites
+- **PHP 8.2+**
+- **Composer**
+- **Node.js & NPM**
+- **MySQL 8.0+**
+
+#### Setup Steps
+1. **Clone and Install**:
+   ```bash
+   git clone <repository-url>
+   cd new-app
+   composer install
+   ```
+
+2. **Environment Setup**:
+   - `cp .env.example .env`
+   - Update your `.env` file with your local MySQL credentials (`DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`).
+
+3. **Database Initialization**:
+   ```bash
+   php artisan key:generate
+   php artisan migrate --seed
+   ```
+
+4. **Frontend Build**:
+   ```bash
+   npm install
+   npm run build
+   ```
+
+5. **Start Server**:
+   ```bash
+   php artisan serve
+   ```
+
+The app will be available at [http://127.0.0.1:8000](http://127.0.0.1:8000).
+
+---
+
+## 📊 Data Management
+
+This project is highly data-driven. The content is managed through seeders:
+
+- **Seeder File**: `database/seeders/ProjectContentSeeder.php`
+- **Re-seeding**: If you update the seeder, run `php artisan db:seed --class=ProjectContentSeeder`.
+
+## 🛠 Tech Stack
+- **Backend**: Laravel 12
+- **Frontend**: Tailwind CSS, Alpine.js, ApexCharts
+- **Maps**: Leaflet.js
+- **Database**: MySQL
+
+## 📄 License
+The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).

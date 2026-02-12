@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Western Visayas: Investment and Economic Profile</title>
+    <link rel="icon" type="image/png" href="{{ asset('dti-logo.png') }}">
+    
+    <!-- Scripts & Styles -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <script src="https://unpkg.com/alpinejs@3.12.0/dist/cdn.min.js" defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Leaflet Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+                    },
+                    colors: {
+                        arbitra: {
+                            black: '#000000',
+                            dark: '#0A0A0A',
+                            emerald: '#10b981',
+                            gray: '#888888',
+                        }
+                    },
+                    borderRadius: {
+                        'bento': '2rem',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body { 
+            background-color: #000000; 
+            color: #FFFFFF; 
+            font-size: 14px;
+        }
+        
+        [x-cloak] { display: none !important; }
+        
+        .bento-card {
+            background: rgba(28, 28, 30, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .bento-card:hover {
+            border-color: rgba(16, 185, 129, 0.6);
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px -20px rgba(0, 0, 0, 0.5);
+        }
+
+        .pop-indicator {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 20px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+        
+        .bento-card:hover .pop-indicator {
+            background: #10b981;
+            color: #000000;
+            transform: rotate(90deg);
+        }
+
+        .text-sm { font-size: 14px; }
+        .text-xs { font-size: 14px; } /* Override xs to 14px */
+        
+        [x-cloak] { display: none !important; }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0B0B0B; }
+        ::-webkit-scrollbar-thumb { background: #1C1C1C; border-radius: 3px; border: 1px solid #2C2C2C; }
+        
+        .emerald-text { color: #10b981; }
+        
+        .grid-compact {
+            display: grid;
+            gap: 1.5rem; /* 24px gap */
+        }
+
+        .section-header {
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .section-header h2 {
+            font-size: 2rem;
+            font-weight: 900;
+            letter-spacing: -0.05em;
+            text-transform: uppercase;
+        }
+
+        .nav-link {
+            font-size: 14px;
+            font-weight: 600;
+            color: #888888;
+            transition: all 0.2s ease;
+        }
+        
+        .nav-link:hover, .nav-link.active {
+            color: #FFFFFF;
+        }
+        
+        /* Dark Mode Map Tiles */
+        .map-tiles {
+            filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+        }
+        .leaflet-popup-content-wrapper, .leaflet-popup-tip {
+            background-color: #0A0A0A;
+            color: #FFFFFF;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body x-data="app()" class="antialiased font-sans">
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('app', () => ({
+                modalOpen: false, 
+                modalTitle: '', 
+                modalContent: {},
+                map: null,
+                init() {
+                    this.$watch('modalOpen', value => {
+                        if (value) {
+                            document.body.classList.add('overflow-hidden');
+                            setTimeout(() => { this.initMap(); }, 100); 
+                        } else {
+                            document.body.classList.remove('overflow-hidden');
+                            if (this.map) {
+                                this.map.remove();
+                                this.map = null;
+                            }
+                        }
+                    });
+                },
+                openModal(title, content) {
+                    this.modalTitle = title;
+                    this.modalContent = content;
+                    this.modalOpen = true;
+                },
+                openFromEl(el) {
+                    if (!el.dataset.content) return;
+                    try {
+                        const content = JSON.parse(el.dataset.content);
+                        const title = el.dataset.title || 'Details';
+                        this.openModal(title, content);
+                    } catch (e) {
+                        console.error('Modal Error:', e, el.dataset.content);
+                    }
+                },
+                initMap() {
+                    const mapContainer = document.getElementById('leaflet-map');
+                    const points = this.modalContent['Map Points'];
+                    if (!mapContainer || !points || points.length === 0) return;
+
+                    if (this.map) { this.map.remove(); }
+                    this.map = L.map('leaflet-map').setView([points[0].lat, points[0].lng], 8);
+                    
+                    setTimeout(() => { this.map.invalidateSize(); }, 200);
+
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; OpenStreetMap',
+                        className: 'map-tiles'
+                    }).addTo(this.map);
+
+                    const emeraldIcon = L.divIcon({
+                        className: 'custom-div-icon',
+                        html: "<div style='background-color: #10b981; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 10px #10b981;'></div>",
+                        iconSize: [12, 12],
+                        iconAnchor: [6, 6]
+                    });
+
+                    const bounds = [];
+                    points.forEach(point => {
+                        L.marker([point.lat, point.lng], {icon: emeraldIcon})
+                            .addTo(this.map)
+                            .bindPopup(`<b style="color:#0A0A0A">${point.label}</b>`);
+                        bounds.push([point.lat, point.lng]);
+                    });
+                    
+                    if (bounds.length > 0) {
+                        this.map.fitBounds(bounds, { padding: [50, 50] });
+                    }
+                }
+            }));
+        });
+    </script>
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-40 bg-arbitra-black/80 backdrop-blur-xl border-b border-white/5 py-4">
+        <div class="max-w-[1240px] mx-auto px-8 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <img src="{{ asset('dti-logo.png') }}" class="h-8 w-auto" alt="DTI Logo">
+                <div class="h-6 w-px bg-white/10 hidden md:block"></div>
+                <h1 class="text-sm font-black tracking-tight uppercase hidden md:block">Western Visayas: Investment and Economic Profile</h1>
+            </div>
+            
+            <div class="flex items-center gap-6 bg-white/5 px-6 py-2 rounded-full border border-white/5">
+                <a href="#hero" class="nav-link text-xs uppercase tracking-widest">WHY</a>
+                <a href="#economy" class="nav-link text-xs uppercase tracking-widest">STATS</a>
+                <a href="#drivers" class="nav-link text-xs uppercase tracking-widest">DRIVERS</a>
+                <a href="#action" class="nav-link text-xs uppercase tracking-widest">ACT</a>
+            </div>
+            
+            <!-- Year Selector -->
+            <div class="hidden lg:flex items-center gap-2 bg-white/5 px-2 py-1.5 rounded-full border border-white/5 mx-4">
+                @foreach($years as $year)
+                    <a href="?year={{ $year }}" 
+                       class="px-3 py-1 rounded-full text-[10px] font-bold transition-all {{ $selectedYear == $year ? 'bg-arbitra-emerald text-arbitra-black shadow-[0_0_10px_rgba(16,185,129,0.3)]' : 'text-arbitra-gray hover:text-white' }}">
+                        {{ $year }}
+                    </a>
+                @endforeach
+            </div>
+
+            <button class="bg-arbitra-emerald text-arbitra-black px-6 py-2.5 rounded-full font-black text-xs uppercase tracking-widest hover:brightness-110 transition shadow-[0_0_30px_rgba(16,185,129,0.2)]">
+                Connect Now
+            </button>
+        </div>
+        <!-- Progress Bar -->
+        <div class="absolute bottom-0 left-0 h-[2px] bg-arbitra-emerald transition-all duration-300" id="scroll-progress" style="width: 0%"></div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="pt-28 pb-20 px-8">
+        @if(isset($noContent) && $noContent)
+            <div class="min-h-[60vh] flex flex-col items-center justify-center text-center">
+                <div class="w-24 h-24 rounded-full bg-white/5 flex items-center justify-center mb-8 animate-pulse">
+                    <svg class="w-10 h-10 text-arbitra-emerald opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+                <h2 class="text-4xl md:text-5xl font-black text-white mb-4 tracking-tight">Coming Soon :)</h2>
+                <p class="text-arbitra-gray max-w-md mx-auto text-lg">Data for <span class="text-arbitra-emerald font-bold">{{ $selectedYear }}</span> is currently being collated. Please check back later.</p>
+                <a href="?year=2024-2025" class="mt-8 px-8 py-3 rounded-full bg-white/5 border border-white/10 text-white font-bold text-sm hover:bg-white/10 transition">Return to 2024-2025</a>
+            </div>
+        @else
+        <div class="max-w-[1240px] mx-auto space-y-16">
+            
+            <!-- STAGE 1: AWARENESS (HERO) -->
+            @php $hero = $contents->where('type', 'hero')->first(); @endphp
+            @if($hero)
+            <div id="hero" class="scroll-mt-32">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div @if(isset($hero->content['modal_details'])) 
+                            data-content="{{ json_encode($hero->content['modal_details']['Why Invest in Visayas Logistics Cluster?'] ?? $hero->content['modal_details']) }}"
+                            data-title="{{ $hero->content['modal_details']['Why Invest in Visayas Logistics Cluster?']['title'] ?? 'Why Invest in Visayas Logistics Cluster?' }}"
+                            @click="openFromEl($el)" 
+                            class="lg:col-span-2 bento-card p-12 flex flex-col justify-center bg-gradient-to-br from-arbitra-dark to-arbitra-black cursor-pointer group hover:border-arbitra-emerald/60 transition-all relative overflow-hidden"
+                         @else
+                            class="lg:col-span-2 bento-card p-12 flex flex-col justify-center bg-gradient-to-br from-arbitra-dark to-arbitra-black"
+                         @endif>
+                         
+                        <!-- Hover Effect BG -->
+                        <div class="absolute inset-0 bg-arbitra-emerald/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+                        <div class="relative z-10">
+                            <div class="flex items-center gap-3 mb-10">
+                                <span class="px-5 py-1.5 rounded-full bg-arbitra-emerald/10 text-arbitra-emerald font-black text-[10px] uppercase tracking-[0.2em] border border-arbitra-emerald/20">Investment Motivation</span>
+                                @if(isset($hero->content['modal_details']))
+                                <div class="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold text-white/50 group-hover:text-white group-hover:bg-arbitra-emerald/20 transition-all flex items-center gap-2">
+                                    <span>CLICK TO VIEW DETAILS</span>
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                </div>
+                                @endif
+                            </div>
+                            <h2 class="text-6xl md:text-7xl font-black mb-10 leading-[1] tracking-tighter uppercase italic group-hover:text-white transition-colors">
+                                Why Invest in<br>Western Visayas?
+                            </h2>
+                            <p class="text-lg text-arbitra-gray max-w-xl leading-relaxed font-medium group-hover:text-white/80 transition-colors">
+                                A strategic gateway in the heart of the Philippines, offering a collaborative environment, abundant natural resources, and a rapidly industrializing economy ready for global expansion.
+                            </p>
+                        </div>
+                        <div class="pt-8 mt-auto border-t border-white/5">
+                            <span class="text-[10px] font-bold text-arbitra-gray uppercase tracking-widest block mb-1">Source</span>
+                            <p class="text-xs text-arbitra-emerald font-bold">DTI Region 6</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-col gap-6">
+                        @foreach($hero->content['highlight_stats'] as $index => $stat)
+                        <div class="bento-card flex-1 p-10 flex flex-col justify-between">
+                            <span class="text-sm font-bold text-arbitra-gray uppercase tracking-widest">{{ $stat['label'] }}</span>
+                            <div class="mt-4">
+                                <h3 class="text-5xl font-black emerald-text tracking-tighter">{{ $stat['value'] }}</h3>
+                                <span class="text-[10px] font-black text-arbitra-gray uppercase tracking-widest mt-2 block opacity-40">{{ $stat['label'] }}</span>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+            @endif
+
+            <!-- STAGE 2: AUTHORITY (TRUST BAR) -->
+            <div x-data="{ hovered: false }" 
+                 @mouseenter="hovered = true" 
+                 @mouseleave="hovered = false"
+                 class="relative overflow-hidden whitespace-nowrap py-10 border-y border-white/5 transition duration-500">
+                
+                <!-- Single Banner Tooltip -->
+                <div x-show="hovered"
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0 translate-y-4"
+                     x-transition:enter-end="opacity-100 translate-y-0"
+                     x-transition:leave="transition ease-in duration-150"
+                     x-transition:leave-start="opacity-100 translate-y-0"
+                     x-transition:leave-end="opacity-0 translate-y-4"
+                     class="absolute top-2 left-1/2 -translate-x-1/2 px-5 py-2 rounded-full bg-arbitra-emerald text-arbitra-black font-black text-[10px] tracking-[0.2em] whitespace-nowrap pointer-events-none z-50 shadow-[0_0_30px_rgba(16,185,129,0.4)]"
+                     x-cloak>
+                    PARTNERS OF WESTERN VISAYAS
+                </div>
+
+                <div class="inline-block animate-marquee transition-all duration-500"
+                     :class="hovered ? 'scale-[1.1] text-arbitra-emerald' : ''">
+                    @php
+                        $firms = ['CONCENTRIX', 'TELEPERFORMANCE', 'TRANSCOM', 'TELETECH', 'LEGATO', 'SM RETAIL', 'ROBINSONS', 'PUEBLO DE PANAY', 'MEGAWORLD', 'AYALA LAND'];
+                    @endphp
+                    @foreach(array_merge($firms, $firms) as $firm)
+                        <span class="text-2xl font-black mx-12 tracking-widest cursor-default inline-block text-white transition-colors duration-500"
+                              :class="hovered ? 'text-arbitra-emerald' : 'text-white'">
+                            {{ $firm }}
+                        </span>
+                    @endforeach
+                </div>
+            </div>
+            <style>
+                @keyframes marquee {
+                    0% { transform: translateX(0); }
+                    100% { transform: translateX(-50%); }
+                }
+                .animate-marquee {
+                    display: inline-block;
+                    animation: marquee 30s linear infinite;
+                }
+            </style>
+
+            <!-- MAIN CONTENT SECTIONS (ORDERED BY PAGE NUMBER) -->
+            @foreach($contents->whereIn('type', ['stats_grid', 'chart', 'grid', 'list'])->sortBy('page_number') as $content)
+                {{-- Dynamic ID for navigation --}}
+                @php
+                    $sectionId = match(true) {
+                        str_contains(strtolower($content->section_title), 'overview') => 'economy',
+                        str_contains(strtolower($content->section_title), 'infrastructure') => 'infrastructure',
+                        str_contains(strtolower($content->section_title), 'driver') => 'drivers',
+                        str_contains(strtolower($content->section_title), 'industry') => 'industries',
+                        default => 'section-' . $content->id
+                    };
+                @endphp
+
+                @if($content->type === 'stats_grid')
+                    <section id="{{ $sectionId }}" class="scroll-mt-32 border-b border-white/5 pb-20 mb-20">
+                        <div class="section-header border-b border-white/5 pb-4 mb-10 justify-between items-end">
+                            <h2 class="font-black uppercase tracking-tight">{{ $content->section_title }}</h2>
+                            
+                            <!-- Source Display (Compact Header) -->
+                            <div class="hidden md:block text-right">
+                                <span class="text-[10px] font-bold text-arbitra-gray uppercase tracking-widest block">Source</span>
+                                @php
+                                    $source = $content->source ?? 'DTI Region 6';
+                                    $isUrl = preg_match('/^https?:\/\//', $source) || preg_match('/^www\./', $source);
+                                    $displaySource = $isUrl ? (strlen($source) > 30 ? substr($source, 0, 27) . '...' : $source) : $source;
+                                    $url = preg_match('/^www\./', $source) ? 'https://' . $source : $source;
+                                @endphp
+                                @if($isUrl)
+                                    <a href="{{ $url }}" target="_blank" class="text-xs text-arbitra-emerald font-bold hover:underline">{{ $displaySource }}</a>
+                                @else
+                                    <p class="text-xs text-arbitra-emerald font-bold">{{ $source }}</p>
+                                @endif
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            @foreach($content->content['stats'] as $stat)
+                                @php
+                                    $hasExtra = isset($content->content['modal_details']) || isset($stat['detail']);
+                                    $extraData = $content->content['modal_details'] ?? (isset($stat['detail']) ? ['Details' => $stat['detail']] : null);
+                                    
+                                    // Dynamic Icon Logic for Stats
+                                    $label = strtolower($stat['label']);
+                                    $iconPath = 'M13 10V3L4 14h7v7l9-11h-7z'; // Default Lightning
+                                    if(str_contains($label, 'population') || str_contains($label, 'graduate')) $iconPath = 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z';
+                                    if(str_contains($label, 'area') || str_contains($label, 'land')) $iconPath = 'M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z';
+                                    if(str_contains($label, 'university') || str_contains($label, 'school')) $iconPath = 'M12 14l9-5-9-5-9 5 9 5z';
+                                    if(str_contains($label, 'tower') || str_contains($label, 'wifi')) $iconPath = 'M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0';
+                                @endphp
+                                <div @if($hasExtra) 
+                                     data-content="{{ json_encode($extraData) }}"
+                                     data-title="{{ $stat['label'] }}"
+                                     @click="openFromEl($el)" 
+                                     @endif
+                                     class="bento-card p-8 flex flex-col justify-between {{ $hasExtra ? 'poppable cursor-pointer group' : '' }}">
+                                    
+                                    @if($hasExtra)
+                                    <div class="px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-[9px] font-bold text-white/30 group-hover:text-white group-hover:bg-arbitra-emerald/20 transition-all flex items-center gap-1.5 absolute top-6 right-6">
+                                        <span>CLICK TO VIEW DETAILS</span>
+                                    </div>
+                                    @endif
+
+                                    <div>
+                                        <div class="w-10 h-10 rounded-xl bg-arbitra-emerald/10 flex items-center justify-center mb-8 border border-arbitra-emerald/10">
+                                            <svg class="h-5 w-5 text-arbitra-emerald" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $iconPath }}"></path></svg>
+                                        </div>
+                                        <h4 class="text-sm font-bold text-arbitra-gray uppercase tracking-widest mb-3">{{ $stat['label'] }}</h4>
+                                        <h3 class="text-3xl font-extrabold text-white tracking-tight leading-none">{{ $stat['value'] }}</h3>
+                                    </div>
+
+                                    @if(isset($stat['detail']) && !$hasExtra)
+                                    <p class="mt-6 text-sm text-arbitra-gray/60 leading-relaxed">{{ $stat['detail'] }}</p>
+                                    @endif
+                                </div>
+                            @endforeach
+                        </div>
+                        
+                        @if(isset($content->content['notable_info']))
+                        <div class="mt-8 p-6 rounded-2xl bg-arbitra-emerald/5 border border-arbitra-emerald/10 flex items-start gap-4">
+                            <div class="w-10 h-10 rounded-full bg-arbitra-emerald/20 flex items-center justify-center shrink-0">
+                                <svg class="w-5 h-5 text-arbitra-emerald" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-black text-arbitra-emerald uppercase tracking-[0.2em] mb-1">Notable Info</h4>
+                                <p class="text-base font-medium text-white/80 leading-relaxed">{{ $content->content['notable_info'] }}</p>
+                            </div>
+                        </div>
+                        @endif
+                    </section>
+
+                @elseif($content->type === 'chart')
+                    <section id="{{ $sectionId }}" class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-20 border-b border-white/5 pb-20 scroll-mt-32">
+                        <div class="lg:col-span-2 bento-card p-12">
+                            <div class="flex items-center justify-between mb-12">
+                                <div>
+                                    <h2 class="text-2xl font-extrabold text-white">{{ $content->section_title }}</h2>
+                                    <p class="text-sm text-arbitra-gray mt-2">{{ $content->content['modal_text'] ?? 'Sectoral growth breakdown' }}</p>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <div class="w-3 h-3 rounded-full bg-arbitra-emerald animate-pulse"></div>
+                                    <span class="text-sm font-bold text-arbitra-gray">ACTIVE TREND</span>
+                                </div>
+                            </div>
+                            <div id="chart-{{ $content->id }}" class="w-full"></div>
+                        </div>
+
+                        <div class="bento-card p-10 flex flex-col justify-between bg-gradient-to-br from-arbitra-dark to-[#151515]">
+                            <div>
+                                <h3 class="text-sm font-bold text-arbitra-gray uppercase tracking-[0.2em] mb-8">INSIGHTS</h3>
+                                <p class="text-base text-white/80 leading-relaxed font-medium">
+                                    {{ $content->content['modal_text'] ?? 'Detailed statistical analysis of the regional performance.' }}
+                                </p>
+                            </div>
+                            <div class="pt-8 border-t border-white/5">
+                                <span class="text-sm font-bold text-arbitra-gray block mb-4">PRIMARY SOURCE:</span>
+                                @php
+                                    $source = $content->source;
+                                    $isUrl = preg_match('/^https?:\/\//', $source) || preg_match('/^www\./', $source);
+                                    $displaySource = $isUrl ? (strlen($source) > 30 ? substr($source, 0, 27) . '...' : $source) : $source;
+                                    $url = preg_match('/^www\./', $source) ? 'https://' . $source : $source;
+                                @endphp
+                                
+                                @if($isUrl)
+                                    <a href="{{ $url }}" target="_blank" class="text-sm text-arbitra-emerald font-bold italic hover:underline transition-all">
+                                        {{ $displaySource }}
+                                    </a>
+                                @else
+                                    <p class="text-sm text-arbitra-emerald font-bold italic">{{ $source }}</p>
+                                @endif
+                            </div>
+                        </div>
+
+                        @php
+                            $categories = $content->content['categories'] ?? $content->content['labels'] ?? [];
+                            $region6Keywords = ['WV (VI)', 'VI (WV)', 'Region VI', 'WESTERN VISAYAS'];
+                            $colorArray = [];
+                            $isDistributed = count($content->content['series'] ?? []) <= 1;
+                            
+                            if ($isDistributed) {
+                                foreach($categories as $cat) {
+                                    $isRegion6 = false;
+                                    foreach($region6Keywords as $key) {
+                                        if(stripos($cat, $key) !== false) { $isRegion6 = true; break; }
+                                    }
+                                    // Region 6 gets White (#FFFFFF), others stay Emerald (#10b981)
+                                    $colorArray[] = $isRegion6 ? '#FFFFFF' : '#10b981';
+                                }
+                            }
+                        @endphp
+                        <script>
+                            document.addEventListener('DOMContentLoaded', function () {
+                                var options = {
+                                    series: @json($content->content['series']),
+                                    chart: {
+                                        type: '{{ $content->content['chart_type'] ?? 'bar' }}',
+                                        height: 400,
+                                        fontFamily: 'Inter, sans-serif',
+                                        toolbar: { show: false },
+                                        background: 'transparent'
+                                    },
+                                    theme: { mode: 'dark' },
+                                    plotOptions: {
+                                        bar: {
+                                            horizontal: {{ isset($content->content['horizontal']) && $content->content['horizontal'] ? 'true' : 'false' }},
+                                            borderRadius: 4,
+                                            columnWidth: '30%',
+                                            distributed: {{ $isDistributed ? 'true' : 'false' }},
+                                        }
+                                    },
+                                    grid: { borderColor: 'rgba(255,255,255,0.02)' },
+                                    xaxis: {
+                                        categories: @json($categories),
+                                        labels: { style: { colors: '#888888', fontWeight: 600, fontSize: '14px' } }
+                                    },
+                                    yaxis: { labels: { style: { colors: '#888888', fontWeight: 600, fontSize: '14px' } } },
+                                    colors: {!! $isDistributed && count($colorArray) > 0 ? json_encode($colorArray) : "['#10b981', '#888888', '#555555']" !!},
+                                    stroke: { width: 0 },
+                                    dataLabels: { enabled: false },
+                                    tooltip: { theme: 'dark' }
+                                };
+                                var chart = new ApexCharts(document.querySelector("#chart-{{ $content->id }}"), options);
+                                chart.render();
+                            });
+                        </script>
+                    </section>
+
+                @elseif($content->type === 'grid')
+                    @if($content->section_title === 'Transportation Infrastructure')
+                        <section id="{{ $sectionId }}" class="scroll-mt-32 border-b border-white/5 pb-20 mb-20 font-sans">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                @foreach($content->content['items'] as $item)
+                                @php $hasModal = isset($item['modal_details']); @endphp
+                                <div @if($hasModal)
+                                     data-content="{{ json_encode($item['modal_details'] ?? []) }}"
+                                     data-title="{{ $item['name'] }}"
+                                     @click="openFromEl($el)" 
+                                     @endif
+                                     class="bento-card p-10 flex flex-col relative overflow-hidden group {{ $hasModal ? 'cursor-pointer hover:border-arbitra-emerald/60' : '' }} transition-all">
+                                    <!-- Background Glow -->
+                                    <div class="absolute top-0 right-0 w-64 h-64 bg-arbitra-emerald/5 rounded-full blur-[100px] group-hover:bg-arbitra-emerald/10 transition-all duration-500"></div>
+                                    
+                                    <div class="relative z-10">
+                                        <div class="flex items-center justify-between mb-6">
+                                            <div class="flex items-center gap-4">
+                                                <div class="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center border border-white/10 group-hover:border-arbitra-emerald/50 group-hover:bg-arbitra-emerald/10 transition-all duration-300">
+                                                    @if(str_contains($item['name'], 'Airports'))
+                                                        <svg class="w-6 h-6 text-white group-hover:text-arbitra-emerald transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                                                    @else
+                                                        <svg class="w-6 h-6 text-white group-hover:text-arbitra-emerald transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13.5 10.5V6.75a4.5 4.5 0 119 0v3.75M3.75 21.75h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H3.75a2.25 2.25 0 00-2.25-2.25v6.75a2.25 2.25 0 002.25 2.25z"></path></svg>
+                                                    @endif
+                                                </div>
+                                                <h3 class="text-3xl font-black text-white uppercase tracking-tight">{{ $item['name'] }}</h3>
+                                            </div>
+                                            @if($hasModal)
+                                            <div class="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold text-white/50 group-hover:text-white group-hover:bg-arbitra-emerald/20 transition-all flex items-center gap-2">
+                                                <span>CLICK TO VIEW DETAILS</span>
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                            </div>
+                                            @endif
+                                        </div>
+                                        
+                                        <p class="text-lg text-arbitra-gray/80 font-medium leading-relaxed border-l-2 border-white/10 pl-6 group-hover:border-arbitra-emerald transition-colors">
+                                            {{ $item['details'] }}
+                                        </p>
+                                    </div>
+                                </div>
+                                @endforeach
+                            </div>
+                            <div class="mt-8 flex justify-end">
+                                <div class="text-right">
+                                    <span class="text-[10px] font-bold text-arbitra-gray uppercase tracking-widest block mb-1">Source</span>
+                                    <p class="text-xs text-arbitra-emerald font-bold">{{ $content->source ?? 'DTI Region 6' }}</p>
+                                </div>
+                            </div>
+                        </section>
+                    @else
+                        {{-- Generic Grid (Drivers, Industries, etc) --}}
+                        <section id="{{ $sectionId }}" class="scroll-mt-32 border-b border-white/5 pb-20 mb-20">
+                            <div class="section-header border-b border-white/5 pb-4 mb-10 justify-between items-end">
+                                <h2 class="font-black uppercase tracking-tight">{{ $content->section_title }}</h2>
+                                 <!-- Source Display -->
+                                 <div class="hidden md:block text-right">
+                                    <span class="text-[10px] font-bold text-arbitra-gray uppercase tracking-widest block">Source</span>
+                                    <p class="text-xs text-arbitra-emerald font-bold">{{ $content->source ?? 'DTI Region 6' }}</p>
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                @foreach($content->content['items'] as $item)
+                                    @php
+                                        $details = $item['details'] ?? '';
+                                        $subItems = $details ? preg_split('/[;•]/', $details, -1, PREG_SPLIT_NO_EMPTY) : [];
+                                        $isCompact = count($subItems) <= 3 && strlen($details) < 150;
+                                        $hasModal = isset($item['modal_details']);
+                                        $poppable = $hasModal || !$isCompact;
+                                        
+                                        // Special Icons for Drivers
+                                        $name = strtolower($item['name']);
+                                        $iconPath = 'M13 10V3L4 14h7v7l9-11h-7z'; // Default
+                                        if(str_contains($name, 'it-bpm') || str_contains($name, 'cyber')) $iconPath = 'M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z';
+                                        if(str_contains($name, 'bamboo') || str_contains($name, 'cacao')) $iconPath = 'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z';
+                                    @endphp
+                                    <div @if($poppable) 
+                                         data-content="{{ json_encode($item['modal_details'] ?? ['Key Details' => $item['details']]) }}"
+                                         data-title="{{ $item['name'] }}"
+                                         @click="openFromEl($el)" 
+                                         @endif
+                                         class="bento-card p-10 flex flex-col justify-between group h-full {{ $poppable ? 'poppable cursor-pointer' : '' }}">
+                                        
+                                        <div class="flex justify-between items-start mb-12">
+                                            <div class="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center group-hover:border-arbitra-emerald/50 group-hover:bg-arbitra-emerald/10 transition-all duration-300">
+                                                <svg class="h-6 w-6 text-white group-hover:text-arbitra-emerald transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="{{ $iconPath }}"></path></svg>
+                                            </div>
+                                            
+                                            @if($poppable)
+                                            <div class="px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-[9px] font-bold text-white/30 group-hover:text-white group-hover:bg-arbitra-emerald/20 transition-all flex items-center gap-1.5">
+                                                <span>CLICK TO VIEW DETAILS</span>
+                                            </div>
+                                            @endif
+                                        </div>
+
+                                        <div>
+                                            <h3 class="text-2xl font-black text-white leading-tight uppercase tracking-tight mb-4">{{ $item['name'] }}</h3>
+                                            @if($isCompact)
+                                                <div class="space-y-3">
+                                                    @foreach($subItems as $sub)
+                                                    <div class="flex items-start gap-2">
+                                                        <div class="mt-1.5 w-1 h-1 rounded-full bg-arbitra-emerald shrink-0"></div>
+                                                        <p class="text-xs font-medium text-arbitra-gray/80">{{ trim($sub) }}</p>
+                                                    </div>
+                                                    @endforeach
+                                                </div>
+                                            @else
+                                                <p class="text-sm text-arbitra-gray leading-relaxed font-medium line-clamp-3">
+                                                    {{ $item['details'] }}
+                                                </p>
+                                            @endif
+                                        </div>
+
+                                        @if($poppable)
+                                        <div class="mt-10 pt-6 border-t border-white/5 text-[10px] font-bold text-arbitra-gray tracking-[0.2em] uppercase flex items-center justify-between group-hover:text-arbitra-emerald transition-colors">
+                                            <span>CLICK TO VIEW DETAILS</span>
+                                            <svg class="w-4 h-4 opacity-50 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                        </div>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
+                        </section>
+                    @endif
+
+                @elseif($content->type === 'list')
+                    <section id="{{ $sectionId }}" class="scroll-mt-32 pb-20 mb-20 border-b border-white/5">
+                        <div class="section-header border-b border-white/5 pb-4 mb-10">
+                            <h2 class="font-black uppercase tracking-tight">{{ $content->section_title }}</h2>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            @foreach($content->content['items'] as $item)
+                                <div class="bento-card p-8 flex items-center">
+                                    <h3 class="text-sm font-bold text-white uppercase tracking-wider">{{ $item }}</h3>
+                                </div>
+                            @endforeach
+                        </div>
+                        
+                        <div class="mt-8 flex justify-end">
+                            <div class="text-right">
+                                <span class="text-[10px] font-bold text-arbitra-gray uppercase tracking-widest block mb-1">Source</span>
+                                <p class="text-xs text-arbitra-emerald font-bold">{{ $content->source ?? 'DTI Region 6' }}</p>
+                            </div>
+                        </div>
+                    </section>
+                @endif
+            @endforeach
+
+            <!-- STAGE 5: ACTION (CLOSING CTA) -->
+            <section id="action" class="py-20">
+                <div class="bento-card p-20 text-center bg-gradient-to-br from-arbitra-emerald/10 to-transparent border-arbitra-emerald/20">
+                    <h2 class="text-5xl md:text-6xl font-black mb-8 tracking-tighter uppercase italic">
+                        Ready to Lead in<br>Western Visayas?
+                    </h2>
+                    <p class="text-xl text-arbitra-gray max-w-2xl mx-auto mb-12 font-medium">
+                        Join over 85,000 thriving businesses. DTI Region 6 is ready to provide the collaborative environment and strategic support your expansion needs.
+                    </p>
+                    <div class="flex flex-col md:flex-row items-center justify-center gap-6">
+                        <button class="bg-arbitra-emerald text-arbitra-black px-12 py-5 rounded-full font-black text-lg uppercase tracking-widest hover:scale-105 transition shadow-[0_0_50px_rgba(16,185,129,0.3)]">
+                            Contact DTI Region 6
+                        </button>
+                        <button class="bg-white/5 text-white border border-white/10 px-12 py-5 rounded-full font-black text-lg uppercase tracking-widest hover:bg-white/10 transition">
+                            Download Profile PDF
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+        @endif
+    </main>
+
+    <!-- Interactive Modal -->
+    <div x-show="modalOpen" 
+         x-cloak
+         class="fixed inset-0 z-50 flex items-center justify-center px-6"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+        
+        <div class="absolute inset-0 bg-arbitra-black/98 backdrop-blur-3xl" @click="modalOpen = false"></div>
+        
+        <div class="relative bg-arbitra-dark max-w-2xl w-full p-16 rounded-[2.5rem] border border-white/10 shadow-[0_30px_100px_rgba(0,0,0,0.8)] overflow-hidden"
+             x-transition:enter="transition ease-out duration-500 transform scale-95 opacity-0"
+             x-transition:enter-end="scale-100 opacity-100"
+             x-transition:leave="transition ease-in duration-300 transform scale-95 opacity-0">
+            
+            <button @click="modalOpen = false" class="absolute top-10 right-10 text-arbitra-gray hover:text-white transition-all transform hover:rotate-90">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+
+            <h3 class="text-3xl font-extrabold text-white tracking-tighter mb-12 uppercase italic" x-text="modalTitle"></h3>
+            
+            <div class="space-y-12 max-h-[60vh] overflow-y-auto pr-6 custom-scrollbar">
+                
+                <!-- Leaflet Map Container (Fixed Position) -->
+                <template x-if="modalContent['Map Points']">
+                    <div class="w-full h-96 rounded-2xl overflow-hidden border border-white/10 relative z-0 mb-8">
+                        <div id="leaflet-map" class="w-full h-full bg-arbitra-dark"></div>
+                    </div>
+                </template>
+
+                <template x-for="(value, key) in modalContent" :key="key">
+                    <div class="space-y-6">
+                        <!-- Hide Map Points Key in Loop -->
+                        <template x-if="key !== 'Map Points'">
+                            <h4 class="text-sm font-bold uppercase tracking-[0.3em] text-arbitra-emerald sticky top-0 bg-arbitra-dark z-10 py-2" x-text="key"></h4>
+                        </template>
+                        
+                        <!-- Grid for 'Points' (Why Invest) -->
+                        <template x-if="key === 'Points' && Array.isArray(value)">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <template x-for="item in value">
+                                    <div class="p-6 rounded-2xl bg-white/5 border border-white/10 hover:border-arbitra-emerald/50 hover:bg-white/10 transition-all group flex items-center justify-center text-center">
+                                        <span class="text-lg font-bold text-white group-hover:text-arbitra-emerald transition-colors" x-text="item"></span>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+
+                        <!-- Standard Key-Value List (Stats) -->
+                        <template x-if="key !== 'Points' && key !== 'Map Points' && typeof value === 'object'">
+                            <div class="grid grid-cols-1 gap-4">
+                                <template x-for="(v, k) in value" :key="k">
+                                    <div class="flex items-center justify-between p-6 rounded-2xl bg-black/40 border border-white/5">
+                                        <span class="text-sm font-bold text-arbitra-gray uppercase tracking-widest" x-text="k"></span>
+                                        <span class="text-lg font-bold text-white" x-text="v"></span>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                        
+                        <!-- Fallback Text -->
+                        <template x-if="typeof value !== 'object'">
+                            <p class="text-lg text-white/80 font-medium leading-relaxed" x-text="value"></p>
+                        </template>
+                    </div>
+                </template>
+            </div>
+            
+            <div class="mt-12 pt-8 border-t border-white/5 flex justify-end">
+                <button @click="modalOpen = false" class="bg-arbitra-emerald text-arbitra-black font-extrabold px-10 py-3 rounded-full hover:brightness-110 transition uppercase text-sm tracking-widest">
+                    GO BACK
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.onscroll = function() {
+            var winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+            var height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            var scrolled = (winScroll / height) * 100;
+            document.getElementById("scroll-progress").style.width = scrolled + "%";
+        };
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,481 @@
+[page_1.png]
+Logo: dti WESTERN VISAYAS
+Title: WESTERN VISAYAS INDUSTRY PROFILE
+Date: 10 September 2025
+Presenter: Mutya D. Eusores, OIC-Assistant Regional Director, DTI6
+
+--- PAGE 2 ---
+Header: Western Visayas or Region VI is located at the center of the Philippine archipelago and lies between two large bodies of water, the Sibuyan Sea and the Visayan Sea.
+Land Area: 20,794 sq. km.
+Coastal/Landlocked: Coastal
+Population (2024): 4,861,911
+Density (2024): 370 / km2
+The Region is Composed Of:
+- 5 Provinces: Aklan, Antique, Capiz, Guimaras, & Iloilo
+- 3 Cities
+- 98 Municipalities
+- 3,209 Barangays
+- 10 Congressional Districts
+Note: Last June 13, 2024, President Bongbong Marcos signed the Republic Act No. 12000 to established the Negros Island Region (NIR).
+Source: Philippine Statistics Authority, Census of Population 2024
+Map Labels: Sibuyan Sea, Visayan Sea, BORACAY, AKLAN, KAlibo, CAPIZ, ROXAS CITY, ANTIQUE, ILOILO, ILOILO CITY, SAN JOSE DE BUENAVISTA, GUIMARAS.
+
+--- PAGE 3 ---
+Title: Economic Review
+Background: High-rise buildings and residential area.
+
+--- PAGE 4 ---
+Title: 2024 GROSS REGIONAL DOMESTIC PRODUCT AT CONSTANT 2018 PRICES
+Subtitle: Gross Regional Domestic Product (Growth Rates, 2023-2024, in Percent)
+Metadata: As of April 2025, Reference number: MAS01-RA-04222025
+Chart Data (Growth Rates %):
+- PH: 5.7
+- VII: 7.3 (Central Visayas - Fastest Growing)
+- XIII: 6.9
+- III: 6.5
+- XI: 6.3
+- VIII: 6.2
+- X: 6.0
+- NIR: 5.9 (Negros Island Region)
+- NCR: 5.59
+- IVA: 5.56
+- XII: 5.5
+- II: 5.3
+- I: 4.94
+- V: 4.92
+- CAR: 4.8
+- MIMAROPA: 4.4
+- VI: 4.3 (Western Visayas - Highlighted)
+- IX: 4.2
+- BARMM: 2.7
+Note: In 2024, Central Visayas was the fastest growing region in the country with 7.3 percent growth.
+Source: https://psa.gov.ph/system/files/pad/2024%20GRDP%20Publication.pdf
+
+--- PAGE 5 ---
+Header: Western Visayas (WV) Industry Share to the 2023-2024 Gross Domestic Product (GDP) at constant 2018 prices (in percent)
+Narrative: The economy of Western Visayas grew by 4.3 percent in 2024, slower than the 6.8 percent growth in 2023. The Western Visayas economy was valued at PhP 641.76 billion (2.9% of the country's GDP) at constant 2018 prices.
+Chart Data (Growth Rates %):
+- Philippines: 5.7
+- NCR: 5.59
+- CAR: 4.8
+- I: 4.94
+- II: 5.3
+- III: 6.5
+- IVA: 5.56
+- MIMAROPA: 4.4
+- V: 4.92
+- VI: 4.3 (Western Visayas)
+- NIR: 5.9
+- VII: 7.3 (Central Visayas)
+- VIII: 6.2
+- IX: 4.2
+- X: 6.0
+- XI: 6.3
+- XII: 5.5
+- XIII: 6.9
+- BARMM: 2.7
+Source: https://psa.gov.ph/system/files/pad/2024%20GRDP%20Publication.pdf
+
+--- PAGE 6 ---
+Header: Western Visayas (WV) Industry Share to the Per Capita Gross Domestic Product (GDP) At Constant 2018 Proces (in percent)
+Figure Title: Figure 10. Per Capita GDP by Region, Growth Rates, 2023-2024 At Constant 2018 Prices, (in Percent)
+Chart Data (Per Capita Growth Rates %):
+- Philippines: 4.8
+- NCR: 5.0
+- CAR: 3.63
+- I: 4.7
+- II: 4.6
+- III: 5.6
+- IVA: 4.3
+- MIMAROPA: 3.64
+- V: 4.0
+- VI: 3.62 (Western Visayas)
+- NIR: 5.5
+- VII: 6.2
+- VIII: 5.4
+- IX: 3.2
+- X: 5.1
+- XI: 5.3
+- XII: 4.4
+- XIII: 5.8
+- BARMM: 1.0
+Source: https://psa.gov.ph/system/files/pad/2024%20GRDP%20Publication.pdf
+
+--- PAGE 7 ---
+Header: Western Visayas (WV) Growth Rates by Industry: 2023-2024 At Constant 2018 Prices, in Percent
+Chart Data (Growth Rates %):
+- Professional and business services: 13.7
+- Electricity, steam, water and waste management: 13.52
+- Human health and social work activities: 13.49
+- Accommodation and food service activities: 10.4
+- Transportation and storage: 8.6
+- Financial and insurance activities: 8.0
+- Other services: 7.6
+- Wholesale and retail trade; repair of motor vehicles and motorcycles: 7.3
+- Information and communication: 6.8
+- Real estate and ownership of dwellings: 5.3
+- Public administration and defense; compulsory social security: 3.6
+- Construction: 3.53
+- Mining and quarrying: 3.48
+- Education: 3.4
+- Manufacturing: 2.6
+- Agriculture, forestry, and fishing: -7.3
+Narrative: The top three industries that recorded the fastest growth were the following: Professional and business services at 13.7 percent; Electricity, steam, water and waste management at 13.5 percent; and Human health and social work activities at 13.5 percent. Meanwhile, AFF posted a decline of 7.3 percent in 2024.
+Source: https://psa.gov.ph/system/files/pad/2024%20GRDP%20Publication.pdf
+
+--- PAGE 8 ---
+Title: Major Industries & Employment
+Background: Section divider with greenish city skyline.
+
+--- PAGE 9 ---
+Title: THE 12 ECONOMIC DRIVERS OF WESTERN VISAYAS
+Drivers:
+1. AGRICULTURE: DA and attached agencies, DOST, NIA, PCA, PhilFIDA, PhilMEC, SUCs, LGUs
+2. MARINE & FISHERIES: BFAR, DOST, SUCs, LGUs
+3. MSMEs & LARGE MANUFACTURING: DTI, DOST, LGUs
+4. IT/BPO/BPMS: DTI, DICT and Private Companies
+5. WHOLESALE AND RETAIL: DTI, LGUs
+6. TOURISM: DOT, DTI, LGUs
+7. PROPERTY DEVELOPMENT: DHSUD, LGUs
+8. CONSTRUCTION: DPWH, LGUs
+9. HOUSING: DepEd, CHED, DOH, DSWD, LGUs, National Housing Authority
+10. FINANCIAL INSTITUTIONS: BSP
+11. PORT OPERATIONS: PPA, CAAP, LGUs, Marina
+12. TRANSPORTATION: LTFRB, LGUs
+Source: NEDA Region VI
+Logo: DTI Western Visayas
+
+--- PAGE 10 ---
+Title: DTI Business Name Registration in Western Visayas (2022 - September 4, 2025)
+Chart (Business Name Registration):
+- 2022: Total 56,135
+- 2024: Total 71,289
+- 2025 (as of Sept 4): Total 52,187
+Transaction Method (Total 245,236):
+- Online: 173,060 (70.57%)
+- Hybrid: 45,188 (18.43%)
+- Walkin: 26,988 (11%)
+Gender:
+- Women: 155,723 (63.5%)
+- Men: 89,513 (36.5%)
+Territorial Scope:
+- BARANGAY: 162,943
+- CITYPROV: 53,490
+- REGIONAL: 19,096
+- NATIONAL: (Visible but unlabeled value)
+Source: https://bnrs.dti.gov.ph/resources/bn-statistics
+
+--- PAGE 11 ---
+Title: Numbers of Establishments in Operation and Total Employment by Province in Western Visayas 2021-2023
+Chart Data:
+- Aklan: 2021 (6,399), 2022 (6,737), 2023 (8,907)
+- Antique: 2021 (4,304), 2022 (4,380), 2023 (5,719)
+- Capiz: 2021 (7,958), 2022 (8,220), 2023 (9,533)
+- Guimaras: 2021 (1,407), 2022 (1,487), 2023 (1,890)
+- Iloilo (inc. Iloilo City): 2021 (23,230), 2022 (24,148), 2023 (26,395)
+- Negros Occidental (inc. Bacolod City): 2021 (30,417), 2022 (30,776), 2023 (33,200)
+Source: PSA Region 6 Special Release - Reference No. 2025-SR18
+
+--- PAGE 12 ---
+Title: Number of Micro, Small, Medium and Large Establishments by Province in Western Visayas, 2023
+Chart Data (% share by province/city):
+- Large (223): Aklan (6.3%), Antique (2.2%), Capiz (5.8%), Guimaras (0.4%), Iloilo (8.1%), Iloilo City (27.4%), Negros Occ (13.9%), Bacolod City (35.9%)
+- Medium (239): Aklan (13.8%), Antique (1.7%), Capiz (4.2%), Guimaras (0.4%), Iloilo (9.6%), Iloilo City (20.5%), Negros Occ (22.2%), Bacolod City (27.6%)
+- Small (6,791): Aklan (12.3%), Antique (4.0%), Capiz (7.6%), Guimaras (1.4%), Iloilo (14.7%), Iloilo City (18.7%), Negros Occ (17.3%), Bacolod City (24.0%)
+- Micro (78,391): Aklan (10.2%), Antique (6.9%), Capiz (11.5%), Guimaras (2.3%), Iloilo (21.2%), Iloilo City (9.4%), Negros Occ (24.2%), Bacolod City (14.3%)
+Source: PSA Region 6 Special Release - Reference No. 2025-SR18
+
+--- PAGE 13 ---
+Title: Numbers of Establishments in Operation and Total Employment by Province in Western Visayas 2021-2023
+Figure 3: Total Employment of Establishments in Operation by Province in Western Visayas, 2021-2023
+Chart Data (Total Employment):
+- Aklan: 2021 (30,841), 2022 (32,996), 2023 (51,452)
+- Antique: 2021 (20,256), 2022 (19,851), 2023 (25,451)
+- Capiz: 2021 (32,406), 2022 (34,791), 2023 (42,683)
+- Guimaras: 2021 (4,828), 2022 (5,201), 2023 (6,951)
+- Iloilo (inc. Iloilo City): 2021 (146,410), 2022 (150,969), 2023 (165,833)
+- Negros Occidental (inc. Bacolod City): 2021 (209,600), 2022 (207,238), 2023 (237,824)
+Source: PSA Region 6 Special Release - Reference No. 2025-SR18
+
+--- PAGE 14 ---
+Title: Numbers of Establishments in Operation and Total Employment by Province in Western Visayas 2021-2023
+Figure 4: Total Employment by Province in Western Visayas, 2023
+Chart Data (Total Employment by Sector/Size):
+- Large (124,511): Aklan (3.3%), Antique (3.9%), Capiz (3.8%), Guimaras (0.3%), Iloilo (8.7%), Iloilo City (24.4%), Negros Occ (10.1%), Bacolod City (45.5%)
+- Medium (32,546): Aklan (14.1%), Antique (1.7%), Capiz (4.0%), Guimaras (0.4%), Iloilo (9.4%), Iloilo City (20.8%), Negros Occ (21.7%), Bacolod City (27.8%)
+- Small (146,564): Aklan (12.4%), Antique (3.4%), Capiz (7.5%), Guimaras (1.2%), Iloilo (12.9%), Iloilo City (18.7%), Negros Occ (19.0%), Bacolod City (25.0%)
+- Micro (226,573): Aklan (10.8%), Antique (6.7%), Capiz (11.3%), Guimaras (2.1%), Iloilo (20.1%), Iloilo City (10.1%), Negros Occ (23.4%), Bacolod City (15.5%)
+Source: PSA Region 6 Special Release - Reference No. 2025-SR18
+
+--- PAGE 15 ---
+Title: Workforce and Skills
+Background: Section divider with orange overlay.
+
+
+--- PAGE 16 ---
+Title: Higher Education Institution by Province or Highly Urbanized City
+Table Data (HEIs):
+- Iloilo City: Grand Total (29), Public (Sucs Main: 2, LUCs: 1, Subtotal: 3), Private (Non-Sectarian: 16, Sectarian: 10, Subtotal: 26)
+- Iloilo: Grand Total (27), Public (Sucs Main: 2, Sucs Satellite: 20, LUCs: 1, Subtotal: 23), Private (Non-Sectarian: 4, Subtotal: 4)
+- Capiz: Grand Total (17), Public (Sucs Main: 1, Sucs Satellite: 8, Subtotal: 9), Private (Non-Sectarian: 2, Sectarian: 6, Subtotal: 8)
+- Aklan: Grand Total (16), Public (Sucs Main: 1, Sucs Satellite: 4, LUCs: 4, Subtotal: 9), Private (Non-Sectarian: 4, Sectarian: 3, Subtotal: 7)
+- Antique: Grand Total (9), Public (Sucs Main: 1, Sucs Satellite: 4, LUCs: 1, Subtotal: 6), Private (Non-Sectarian: 2, Sectarian: 1, Subtotal: 3)
+- Guimaras: Grand Total (4), Public (Sucs Main: 1, Sucs Satellite: 2, Subtotal: 3), Private (Non-Sectarian: 1, Subtotal: 1)
+Totals: Grand Total (102), Public (Sucs Main: 8, Sucs Satellite: 38, LUCs: 7, Subtotal: 53), Private (Non-Sectarian: 29, Sectarian: 20, Subtotal: 49)
+Percentage (%): Public (51.96%), Private (48.04%)
+Key Stats:
+- 20,391: No. of Higher Education Graduates for Programs by Program Discipline (Business Admin, Engineering/Tech, IT-Related, Medical/Allied, Mass Comm, Math/Fine/Applied Arts)
+- 102: No. of Higher Education Institutions
+- 46: No. of State Universities and Colleges
+- 7: No. of Local Universities and Colleges
+- 49: No. of Private HEIs
+Charts:
+- Figure 1.1: Iloilo City (28%), Iloilo (26%), Capiz (17%), Aklan (16%), Antique (9%), Guimaras (4%)
+- Figure 1.2: Private HEIs (48%), SUCs (45%), LUCs (7%)
+Source: CHED - Statistical Bulletin AY 2024-2025
+
+--- PAGE 17 ---
+Title: Distribution of Higher Education Institutions by Discipline and Institutional Type (Figure 1.4)
+Chart Data (Public vs Private):
+- Education Science and Teacher Training: Public (345), Private (156)
+- Business Administration and Related: Public (126), Private (160)
+- Engineering and Technology: Public (152), Private (41)
+- IT-Related Disciplines: Public (60), Private (42)
+- Agriculture, Forestry, Fisheries: Public (93), Private (2)
+- Medical and Allied: Public (8), Private (58)
+- Social and Behavioral Sciences: Public (14), Private (20)
+- Service Trades: Public (13), Private (19)
+- Natural Science: Public (19), Private (12)
+- Humanities: Public (15), Private (13)
+- Maritime: Public (2), Private (20)
+- Mathematics: Public (11), Private (0)
+- Mass Communication and Documentation: Public (8), Private (3)
+- Religion and Theology: Public (0), Private (9)
+- Architecture and Town Planning: Public (5), Private (2)
+- Fine and Applied Arts: Public (2), Private (5)
+- Law and Jurisprudence: Public (1), Private (5)
+- Home Economics: Public (4), Private (0)
+- Other Disciplines: Public (20), Private (20)
+Source: CHED - Statistical Bulletin AY 2024-2025
+
+--- PAGE 18 ---
+Title: Infrastructure and Investment Opportunities
+Background: Section divider with dark red background and tech/infrastructure icons.
+
+--- PAGE 19 ---
+Title: Transportation
+Key Stats:
+- 9 Airports: Western Visayas has six (6) CAAP-operated airports and three (3) additional airstrips for private use.
+- 152 operational ports distributed all over the provinces: Western Visayas has 49 fishing ports, 69 private commercial ports, 23 public commercial ports, and 11 feeder ports.
+Sources: 
+- Area Centers | Civil Aviation Authority of the Philippines
+- Wikipedia (Sipalay, Sicogon, Semirara Island)
+- WV RSET Chapter 7 - TRADE
+- https://rsc6.gov.ph/statistics/economic-statistics/trade/
+
+--- PAGE 20 ---
+Title: Telecommunications
+Key Stats:
+- 1,027 Cell Towers
+- 293 Wi-Fi Hotspots
+- 20 Fiber-optic Cable
+Summary: Scattered and installed all-over the region to provide fast and stable internet connectivity!
+Source: DICT Region VI (2016-2021)
+
+--- PAGE 21 ---
+Title: Connectivity Highlights
+Visuals: Logos of major connectivity providers in cloud-shaped bubbles: PLDT, Converge ICT Solutions Inc., One Sky, Globe.
+
+--- PAGE 22 ---
+Title: Operating PEZA Sites
+Key Stats:
+- 23 Operating PEZA Sites
+- 1 in Aklan
+- 1 in Capiz
+- 6 in Iloilo City
+- 12 in Bacolod City
+- 3 in Negros Occidental
+Source: List of PEZA Registered Special Economic Zone as of February 2023
+
+--- PAGE 23 ---
+Title: Investment Opportunities in Visayas Logistics Cluster
+Opportunities:
+- Seaport (Large image of cargo ship and port)
+- Warehouse (Internal and external views)
+- Roads and Bridges (Highway and long bridge views)
+- Cold Storage Facility
+- Airport
+- Trucking Facility
+- Agri Terminal
+- Processing Plant
+- Railway
+- Food Terminal
+- ICT Infrastructure
+- Economic Zone
+- Slaughterhouse
+- Container Yard
+- Bagsakan Center
+- Fishport
+- Farm Market
+- Transport Facility
+- Packaging Plant
+Source: Supra Regional Consultations to Improve Logistics Efficiency, Reduce Logistics Costs, and Agri Supply Chain | 08 September 2022 | VIZ Logistics Cluster
+
+--- PAGE 24 ---
+Title: Why Invest in Visayas Logistics Cluster?
+Key Points:
+- Abundant in Natural Resources
+- Agricultural Potential
+- Collaborative Environment
+- Competitive Human Capital
+- Decongestion of other Areas within PH
+- Generally Peaceful and Orderly
+- High Demand for Logistics
+- High Potential for Economic Growth
+- Increasing Population
+- Lack of Logistics Infrastructure
+- Mitigation of Trade & Manufacturing Paralysis
+- Presence of Logistics Infrastructure
+- Strategic Location
+- Sufficient Power Supply
+Source: Supra Regional Consultations to Improve Logistics Efficiency, Reduce Logistics Costs, and Agri Supply Chain | 08 September 2022 | VIZ Logistics Cluster
+
+--- PAGE 25 ---
+Title: REGION 6 - WESTERN VISAYAS PRIORITY INDUSTRIES
+Content by Province:
+- ILOILO: Tourism, Processed Food, IT-BPM.
+- GUIMARAS: Fruits (Mangoes), Nuts (Cashews).
+- ANTIQUE: Bamboo, Processed Food (Kalamay).
+- AKLAN: Wearables & Homestyle (Piña cloth), Tourism (Boracay), Processed Food.
+- CAPIZ: Aquamarine (Seafood), IT-BPM.
+- NEGROS OCCIDENTAL: Sugar Industry, Wearables & Homestyle, IT-BPM, Processed Food.
+Note: Highly visual slide with photo collages for each province's priority industry.
+Logo: dti WESTERN VISAYAS
+
+--- PAGE 26 ---
+Title: DTI 6 PRIORITY INDUSTRIES
+Industries listed:
+- Coffee
+- Cacao
+- Processed Fruits & Nuts
+- Coconut
+- Bamboo
+- Wearables & Homestyle
+- IT-BPM
+Logo: dti WESTERN VISAYAS
+
+--- PAGE 27 ---
+Title: BAMBOO INDUSTRY IN WESTERN VISAYAS
+Narrative: The Bamboo Industry Cluster is one of the major industry sectors being developed and promoted by DTI Region VI. Various programs and activities have been implemented in different provinces to enhance the competitiveness of the bamboo industry.
+Key Stats:
+- 9: No. of Bamboo Shared Service Facilities (SSF) in Region VI
+- 5: No. of Bamboo Anchor Firms
+- Total Areas Planted as of Sept. 30, 2022 - 25,535.85 has.
+Table Data (YEAR / AREA (HA.)):
+- 2013: 74
+- 2014: 125
+- 2015: 274.35
+- 2017: 4,063.50
+- 2018: 1,068.00
+- 2019: 50
+- 2020: 12,847.00
+- 2021: 4,714.00
+- 2022: 1,320.00
+Source: DTI Region VI - Annual Report
+
+--- PAGE 28 ---
+Title: CACAO INDUSTRY CLUSTER
+Key Stats:
+- Total Farm Area (ha): 1,048.48 ha
+- Area Planted to Cacao (ha): 251 ha
+- Plant Population (seedlings & grafted): 188,169
+- Total No. of Fruit Bearing Trees: 94,158
+- Average Production per Year (kg): 21,988
+- Total No. of Farmers/ Organization Profiled: 230
+Source: DTI Region VI - CoCa data
+
+--- PAGE 29 ---
+Title: COFFEE INDUSTRY CLUSTER
+Key Stats:
+- Area Planted to Coffee (ha): 9,914.32
+- Production (MT - Green Coffee Beans): 2,089.84
+- Production (MT - Dried Cherries): 4,178.68
+- Total No. of Fruit Bearing Trees: 5,879,656
+- Yield (MT/HA): 0.42
+- Robusta Yield (MT): 3,376.26
+Coffee Anchor Firms:
+01. SUGAR VALLEY COFFEE, NEGROS OCC.
+02. COFFEE CULTURE ROASTERY, NEGROS OCC.
+03. KAPE ILOILO
+Source: DTI Region VI - CoCa data
+
+--- PAGE 30 ---
+Title: CFIDP - Coconut Farmers & Industry Development Plan
+Subtitle: Commodities & Players
+Food Products (31):
+- 5 Coco Vinegar
+- 1 Cooking Oil
+- 1 Crude Oil
+- 5 Fresh Coconut
+- 7 Virgin Coconut Oil (VCO)
+- 2 Palm Oil
+- 2 Whole nut
+- 1 Young Coconut
+- 7 Food Coconut by Product
+Non-Food Products (387):
+- 1 Charcoal Briquettes
+- 1 Coco Shell Charcoal
+- 2 Coir Processor
+- 55 Copra Trader
+- 317 Coconut Lumber (Dealer/Processor)
+- 2 Coconut Seedlings / Nursery Producer
+- 2 Non-Food Coconut by Products
+Oil Miller: 3
+Sources: Philippine Coconut Authority - Matrix of Registrants (Jan. - July 2025)
+
+--- PAGE 31 ---
+Title: Processed Fruits & Nuts Industry Cluster
+Priority Commodities in Region VI: Mango, Pineapple, Papaya, Peanut, Banana, Calamansi, Dragon Fruit, and Cashew Nut.
+Production Statistics:
+- Mango: 179,346 MT (Production), 11 Processors.
+- Banana: 757,725 MT (Production), 163,209 Ha (Area), 90 Processors.
+- Pili Nuts: 33 MT (Production), 271 Ha (Area), 1 Processor.
+- Peanuts: 7,388 MT (Production), 9,224 Ha (Area), 37 Processors.
+- Papaya: 15,263 MT (Production), 3,402 Ha (Area), 7 Processors.
+- Calamansi: 31 Processors.
+Source: National Processed Fruits and Nuts Roadmap (2019-2029).
+
+--- PAGE 32 ---
+Title: Wearables & Homestyle Industry Cluster in Western Visayas
+Raw Materials by Province:
+- Aklan: Piña, Abaca, Raffia, Nito, Clay, Bariw, Buri Ramie.
+- Antique: Abaca, Buri, Bamboo, Coco Coir, Semi Precious Stones, Bariw, Nito.
+- Capiz: Bamboo, Shells, Abaca, Agsam Vine, Clay.
+- Guimaras: Pandan, Twined Piña, Coco Shells, Nito, Coco Coir, Buri.
+- Iloilo: Abaca, Bamboo, Clay, Cotton, Shells.
+- Negros Occ.: Bamboo, Clay, Coco ShellS, Silk, Pandan, Water Lily.
+Note: Aklan is renowned for world-class piña clothing and home decorations.
+
+--- PAGE 33 ---
+Title: IT-BPM Industry Cluster in Western Visayas
+Status: 200+ leading IT-BPM/BPO companies (e.g., Concentrix, Teleperformance, Transcom, iQor, etc.).
+Goal: To become a premier location for IT-BPM locators and a seedbed for startups.
+Programs: Online Slingshot Region Six (6) and Moonshot TNK pitching competition.
+Startups: 50 Assisted Startups (2021-2024).
+
+--- PAGE 34 ---
+Title: Opportunities and Challenges
+(Background features a puzzle design).
+
+--- PAGE 35 ---
+Title: Industry Recovery and Growth Strategies
+Key Focus Areas:
+1. Inclusive and Resilient Tourism Development.
+2. Digital Transformation and MSME Empowerment.
+3. Creative and Service Sector Promotion.
+4. Regional Industrialization and Innovation.
+5. Workforce Upskilling and Technology Adoption.
+
+--- PAGE 36 ---
+DTI Western Visayas
+THANK YOU!
