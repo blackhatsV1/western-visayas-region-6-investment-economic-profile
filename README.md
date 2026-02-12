@@ -18,7 +18,7 @@ This project uses [Laravel Sail](https://laravel.com/docs/sail), a light-weight 
 #### Setup Steps
 1. **Clone the repository**:
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/blackhatsV1/western-visayas-region-6-investment-economic-profile
    cd new-app
    ```
 
