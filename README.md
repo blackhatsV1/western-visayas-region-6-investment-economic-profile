@@ -19,7 +19,7 @@ This project uses [Laravel Sail](https://laravel.com/docs/sail), a light-weight 
 1. **Clone the repository**:
    ```bash
    git clone https://github.com/blackhatsV1/western-visayas-region-6-investment-economic-profile
-   cd new-app
+   cd western-visayas-region-6-investment-economic-profile
    ```
 
 2. **Install dependencies**:
@@ -68,8 +68,8 @@ Use this if you prefer running PHP and MySQL directly on your host machine.
 #### Setup Steps
 1. **Clone and Install**:
    ```bash
-   git clone <repository-url>
-   cd new-app
+   git clone https://github.com/blackhatsV1/western-visayas-region-6-investment-economic-profile
+   cd western-visayas-region-6-investment-economic-profile
    composer install
    ```
 
