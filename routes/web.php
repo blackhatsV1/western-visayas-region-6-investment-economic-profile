@@ -3,5 +3,12 @@
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\PublicController;
+use App\Http\Controllers\AdminController;
 
 Route::get('/', [PublicController::class, 'index']);
+
+Route::prefix('admin')->group(function () {
+    Route::get('/', [AdminController::class, 'index']);
+    Route::post('/content', [AdminController::class, 'store']);
+    Route::patch('/content/{content}', [AdminController::class, 'update']);
+});
