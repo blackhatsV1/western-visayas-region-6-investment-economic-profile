@@ -103,6 +103,13 @@
                 <button @click="showAddYear = true" class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-arbitra-emerald hover:text-arbitra-black transition-all">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"></path></svg>
                 </button>
+                
+                <div class="h-6 w-px bg-white/10 mx-2"></div>
+                
+                <button @click="confirmDeleteYear('{{ $selectedYear }}')" class="group flex items-center gap-2 text-arbitra-gray hover:text-red-500 transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    <span class="text-[10px] font-black uppercase tracking-widest hidden group-hover:block">Delete Year</span>
+                </button>
             </div>
 
             <a href="/" class="text-xs font-bold text-arbitra-emerald hover:underline">View Public Site</a>
@@ -168,16 +175,27 @@
 
             <!-- Dynamic Sections -->
             @foreach($contents->whereNotIn('type', ['hero'])->sortBy('page_number') as $content)
-                <section x-data="{ editing: false, form: @js($content->content), title: @js($content->section_title), source: @js($content->source) }" class="bento-card p-12 group">
+                <section x-data="{ 
+                    editing: false, 
+                    form: @js($content->content), 
+                    title: @js($content->section_title), 
+                    source: @js($content->source),
+                    techy: false
+                }" class="bento-card p-12 group">
                     <div class="flex justify-between items-start mb-10">
-                        <h2 class="text-3xl font-black uppercase tracking-tight" x-text="title"></h2>
+                        <div class="flex items-center gap-6">
+                            <h2 class="text-3xl font-black uppercase tracking-tight" x-text="title"></h2>
+                            <button @click="deleteSection({{ $content->id }})" class="opacity-0 group-hover:opacity-100 text-arbitra-gray hover:text-red-500 transition-all">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            </button>
+                        </div>
                         <button @click="editing = true" class="opacity-0 group-hover:opacity-100 bg-arbitra-emerald text-arbitra-black px-6 py-2 rounded-full font-black text-xs transition-all">EDIT SECTION</button>
                     </div>
 
                     @if($content->type === 'stats_grid')
                         <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                            <template x-for="stat in form.stats">
-                                <div class="bg-white/5 p-6 rounded-2xl border border-white/10">
+                            <template x-for="(stat, index) in form.stats">
+                                <div class="bg-white/5 p-6 rounded-2xl border border-white/10 relative group/item">
                                     <span class="text-[10px] font-bold text-arbitra-gray uppercase block" x-text="stat.label"></span>
                                     <h3 class="text-2xl font-black mt-2" x-text="stat.value"></h3>
                                 </div>
@@ -185,8 +203,8 @@
                         </div>
                     @elseif($content->type === 'grid')
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <template x-for="item in form.items">
-                                <div class="bg-white/5 p-6 rounded-2xl border border-white/10">
+                            <template x-for="(item, index) in form.items">
+                                <div class="bg-white/5 p-6 rounded-2xl border border-white/10 relative group/item">
                                     <h4 class="font-black uppercase mb-2" x-text="item.name"></h4>
                                     <p class="text-xs text-arbitra-gray line-clamp-3" x-text="item.details"></p>
                                 </div>
@@ -194,15 +212,62 @@
                         </div>
                     @endif
 
-                    <!-- Edit Overlay for Dynamic Sections -->
+                    <!-- Edit Overlay -->
                     <div x-show="editing" x-cloak class="admin-overlay overflow-y-auto">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-xl font-black uppercase italic text-arbitra-emerald">Editing Section</h3>
+                            <button @click="techy = !techy" class="text-[10px] font-black uppercase text-white/40 hover:text-white border border-white/10 px-3 py-1 rounded" x-text="techy ? 'Switch to Easy Mode' : 'Switch to Techy Mode'"></button>
+                        </div>
+                        
                         <label class="admin-label">Section Title</label>
-                        <input type="text" x-model="title" class="admin-input">
+                        <input type="text" x-model="title" class="admin-input mb-4">
                         
-                        <label class="admin-label">JSON Content (Advanced)</label>
-                        <textarea x-model="JSON.stringify(form, null, 2)" @change="try { form = JSON.parse($event.target.value) } catch(e) { alert('Invalid JSON') }" class="admin-input h-64 font-mono text-[10px]"></textarea>
+                        <div x-show="techy">
+                            <label class="admin-label">Raw JSON Data</label>
+                            <textarea x-model="JSON.stringify(form, null, 2)" @change="try { form = JSON.parse($event.target.value) } catch(e) { alert('Invalid JSON') }" class="admin-input h-64 font-mono text-[10px]"></textarea>
+                        </div>
+
+                        <div x-show="!techy" class="space-y-6">
+                            @if($content->type === 'stats_grid')
+                                <div class="space-y-4">
+                                    <template x-for="(stat, index) in form.stats" :key="index">
+                                        <div class="flex gap-4 items-end bg-white/5 p-4 rounded-xl">
+                                            <div class="flex-1">
+                                                <label class="admin-label">Label</label>
+                                                <input type="text" x-model="stat.label" class="admin-input">
+                                            </div>
+                                            <div class="flex-1">
+                                                <label class="admin-label">Value</label>
+                                                <input type="text" x-model="stat.value" class="admin-input">
+                                            </div>
+                                            <button @click="form.stats.splice(index, 1)" class="p-2 text-red-500 hover:bg-red-500/10 rounded">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                            </button>
+                                        </div>
+                                    </template>
+                                    <button @click="form.stats.push({label: 'New Label', value: '0'})" class="w-full py-2 border-2 border-dashed border-white/10 rounded-xl text-arbitra-gray hover:border-arbitra-emerald hover:text-white transition-all font-bold text-xs uppercase">+ Add New Stat</button>
+                                </div>
+                            @elseif($content->type === 'grid')
+                                <div class="space-y-4">
+                                    <template x-for="(item, index) in form.items" :key="index">
+                                        <div class="flex gap-4 items-start bg-white/5 p-4 rounded-xl">
+                                            <div class="flex-1 space-y-2">
+                                                <label class="admin-label">Name</label>
+                                                <input type="text" x-model="item.name" class="admin-input">
+                                                <label class="admin-label">Details</label>
+                                                <textarea x-model="item.details" class="admin-input h-20"></textarea>
+                                            </div>
+                                            <button @click="form.items.splice(index, 1)" class="p-2 text-red-500 hover:bg-red-500/10 rounded">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                            </button>
+                                        </div>
+                                    </template>
+                                    <button @click="form.items.push({name: 'New Item', details: 'Description...'})" class="w-full py-2 border-2 border-dashed border-white/10 rounded-xl text-arbitra-gray hover:border-arbitra-emerald hover:text-white transition-all font-bold text-xs uppercase">+ Add New Item</button>
+                                </div>
+                            @endif
+                        </div>
                         
-                        <label class="admin-label">Source</label>
+                        <label class="admin-label mt-4">Source</label>
                         <input type="text" x-model="source" class="admin-input">
 
                         <div class="flex gap-4 mt-8">
@@ -267,6 +332,42 @@
                         }
                     } catch (e) {
                         alert('Error saving data');
+                    }
+                },
+
+                async deleteSection(id) {
+                    if (!confirm('Are you sure you want to delete this section? This cannot be undone.')) return;
+                    
+                    try {
+                        const response = await fetch(`/admin/content/${id}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            }
+                        });
+                        if (response.ok) {
+                            window.location.reload();
+                        }
+                    } catch (e) {
+                        alert('Error deleting section');
+                    }
+                },
+
+                async confirmDeleteYear(year) {
+                    if (!confirm(`CRITICAL WARNING: This will delete ALL data for the year range ${year}. This action is permanent. Are you sure?`)) return;
+                    
+                    try {
+                        const response = await fetch(`/admin/year/${year}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            }
+                        });
+                        if (response.ok) {
+                            window.location.href = '/admin';
+                        }
+                    } catch (e) {
+                        alert('Error deleting year');
                     }
                 },
 

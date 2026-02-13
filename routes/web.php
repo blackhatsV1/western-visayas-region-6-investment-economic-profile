@@ -13,4 +13,6 @@ Route::prefix('admin')->group(function () {
     Route::get('/export', [AdminController::class, 'export']);
     Route::post('/content', [AdminController::class, 'store']);
     Route::patch('/content/{content}', [AdminController::class, 'update']);
+    Route::delete('/content/{content}', [AdminController::class, 'destroy']);
+    Route::delete('/year/{year}', [AdminController::class, 'destroyYear']);
 });
