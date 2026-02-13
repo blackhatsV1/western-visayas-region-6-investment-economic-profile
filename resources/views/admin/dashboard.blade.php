@@ -49,14 +49,27 @@
         
         /* Admin Specific */
         .admin-overlay {
-            position: absolute;
+            position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.9);
-            z-index: 50;
-            padding: 2rem;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 100;
             display: flex;
-            flex-direction: column;
-            gap: 1rem;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        .admin-modal {
+            background: #0A0A0A;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-radius: 2rem;
+            width: 100%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 3rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            position: relative;
         }
         .admin-input {
             background: rgba(255, 255, 255, 0.05);
@@ -130,12 +143,75 @@
                         title: @js($hero->section_title), 
                         source: @js($hero->source),
                         modalJson: JSON.stringify(@js($hero->content['modal_details'] ?? null), null, 4),
+                        modalTabs: [],
+                        activeTab: 0,
+                        parseModalDetails() {
+                            const details = this.form.modal_details || {};
+                            this.modalTabs = Object.entries(details).map(([name, value]) => {
+                                let type = 'text';
+                                let data = value;
+                                
+                                if (value && typeof value === 'object') {
+                                    if (value.Points && Array.isArray(value.Points)) {
+                                        type = 'points';
+                                        data = [...value.Points];
+                                    } else if (value['Map Points'] && Array.isArray(value['Map Points'])) {
+                                        type = 'map';
+                                        data = value['Map Points'].map(p => ({...p}));
+                                    } else if (Array.isArray(value)) {
+                                        if (value.length > 0 && typeof value[0] === 'object' && value[0].lat !== undefined) {
+                                            type = 'map';
+                                            data = value.map(p => ({...p}));
+                                        } else {
+                                            type = 'points';
+                                            data = [...value];
+                                        }
+                                    } else {
+                                        type = 'table';
+                                        data = Object.entries(value).map(([k, v]) => ({key: k, value: v}));
+                                    }
+                                }
+                                return { name, type, data };
+                            });
+                        },
+                        syncModalDetails() {
+                            const details = {};
+                            this.modalTabs.forEach(tab => {
+                                if (tab.type === 'points') {
+                                    details[tab.name] = { Points: tab.data };
+                                } else if (tab.type === 'table') {
+                                    const tableObj = {};
+                                    tab.data.forEach(row => { if(row.key) tableObj[row.key] = row.value });
+                                    details[tab.name] = tableObj;
+                                } else if (tab.type === 'map') {
+                                    details[tab.name] = { 'Map Points': tab.data };
+                                } else {
+                                    details[tab.name] = tab.data;
+                                }
+                            });
+                            this.form.modal_details = details;
+                            this.modalJson = JSON.stringify(details, null, 4);
+                        },
+                        addModalTab() {
+                            this.modalTabs.push({ name: 'New Section', type: 'points', data: [] });
+                            this.activeTab = this.modalTabs.length - 1;
+                        },
+                        removeModalTab(index) {
+                            if(confirm('Remove this entire popup section?')) {
+                                this.modalTabs.splice(index, 1);
+                                if(this.activeTab >= this.modalTabs.length) this.activeTab = Math.max(0, this.modalTabs.length - 1);
+                            }
+                        },
                         init() {
+                            this.parseModalDetails();
                             this.$watch('form.modal_details', (val) => {
                                 this.modalJson = JSON.stringify(val, null, 4);
                             });
+                            this.$watch('modalTabs', () => this.syncModalDetails(), { deep: true });
+                            this.$watch('techy', (val) => { if(!val) this.parseModalDetails() });
                         }
-                    }" class="grid grid-cols-1 lg:grid-cols-3 gap-6 relative">
+                    }">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 relative">
                         <!-- Hero Content Preview (Match Public Site) -->
                         <div @click="editing = true" class="lg:col-span-2 bento-card p-12 flex flex-col justify-center bg-gradient-to-br from-arbitra-dark to-arbitra-black cursor-pointer group hover:border-arbitra-emerald/60 transition-all relative overflow-hidden">
                             <div class="absolute inset-0 bg-arbitra-emerald/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
@@ -155,76 +231,220 @@
                                 <span class="text-[10px] font-bold text-arbitra-gray uppercase tracking-widest block mb-1">Source</span>
                                 <p class="text-xs text-arbitra-emerald font-bold" x-text="source"></p>
                             </div>
-                            
-                            <!-- Admin Edit Overlay (Inside Hero) -->
-                            <div x-show="editing" x-cloak class="admin-overlay overflow-y-auto">
-                                <div class="flex justify-between items-center mb-6">
-                                    <h3 class="text-xl font-black uppercase italic text-arbitra-emerald">Editing Hero</h3>
-                                    <button @click.stop="techy = !techy" class="text-[10px] font-black uppercase text-white/40 hover:text-white border border-white/10 px-3 py-1 rounded" x-text="techy ? 'Switch to Easy Mode' : 'Switch to Techy Mode'"></button>
-                                </div>
-                                <div x-show="techy">
-                                    <label class="admin-label">Raw JSON Data</label>
-                                    <textarea @click.stop x-model="JSON.stringify(form, null, 2)" @change="try { form = JSON.parse($event.target.value) } catch(e) { alert('Invalid JSON') }" class="admin-input h-64 font-mono text-[10px]"></textarea>
-                                </div>
-
-                                <div x-show="!techy" class="space-y-4">
-                                    <label class="admin-label">Section Title (Internal)</label>
-                                    <input @click.stop type="text" x-model="title" class="admin-input">
-
-                                    <label class="admin-label">Hero Title (Public)</label>
-                                    <input @click.stop type="text" x-model="form.title" class="admin-input">
-                                    
-                                    <label class="admin-label">Description</label>
-                                    <textarea @click.stop x-model="form.description" class="admin-input h-32"></textarea>
-                                </div>
-                                
-                                <label class="admin-label">Source</label>
-                                <input @click.stop type="text" x-model="source" class="admin-input">
-
-                                {{-- Popup Editor for Hero --}}
-                                <div class="mt-8 pt-8 border-t border-white/10">
-                                    <div class="flex items-center justify-between mb-6">
-                                        <h4 class="text-xs font-black uppercase tracking-widest text-arbitra-emerald">Hero Popup (Investment Motivation)</h4>
-                                        <button @click.stop="if(!form.modal_details) form.modal_details = {}; editingModal = true" x-show="!editingModal" class="text-[10px] font-black uppercase bg-white/5 px-4 py-1.5 rounded-full border border-white/10 hover:bg-arbitra-emerald hover:text-arbitra-black transition-all">Edit Pop-up</button>
-                                    </div>
-
-                                    <div x-show="editingModal" class="space-y-6 bg-black/20 p-6 rounded-2xl border border-white/5">
-                                        <div class="flex justify-between items-center bg-white/5 -m-6 mb-6 p-4 rounded-t-2xl">
-                                            <span class="text-[10px] font-bold text-arbitra-gray uppercase">JSON Content</span>
-                                            <button @click.stop="editingModal = false" class="text-[10px] font-black text-arbitra-emerald">HIDE</button>
-                                        </div>
-                                        <textarea @click.stop x-model="modalJson" 
-                                                  @input="try { form.modal_details = JSON.parse($event.target.value) } catch(e) {}"
-                                                  class="admin-input h-64 font-mono text-xs"></textarea>
-                                    </div>
-                                </div>
-                                
-                                <div class="flex gap-4 mt-auto pt-6">
-                                    <button @click.stop="save({{ $hero->id }}, {section_title: title, content: form, source: source}); editing = false" class="bg-arbitra-emerald text-arbitra-black px-6 py-2 rounded-full font-black text-xs">SAVE CHANGES</button>
-                                    <button @click.stop="editing = false" class="text-white px-6 py-2 rounded-full font-black text-xs border border-white/20">CANCEL</button>
-                                </div>
-                            </div>
                         </div>
 
                         <!-- Highlight Stats -->
                         <div class="flex flex-col gap-6">
                             <template x-for="(stat, index) in form.highlight_stats" :key="index">
-                                <div @click="editing = true" class="bento-card flex-1 p-10 flex flex-col justify-between group relative cursor-pointer hover:border-arbitra-emerald/60">
-                                    <span class="text-sm font-bold text-arbitra-gray uppercase tracking-widest" x-text="stat.label"></span>
-                                    <div class="mt-4">
-                                        <h3 class="text-5xl font-black emerald-text tracking-tighter" x-text="stat.value"></h3>
-                                        <span class="text-[10px] font-black text-arbitra-gray uppercase tracking-widest mt-2 block opacity-40" x-text="stat.label"></span>
+                                <div x-data="{ editingStat: false }" class="flex-1 flex flex-col">
+                                    <div @click="editingStat = true" class="bento-card flex-1 p-10 flex flex-col justify-between group relative cursor-pointer hover:border-arbitra-emerald/60">
+                                        <span class="text-sm font-bold text-arbitra-gray uppercase tracking-widest" x-text="stat.label"></span>
+                                        <div class="mt-4">
+                                            <h3 class="text-5xl font-black emerald-text tracking-tighter" x-text="stat.value"></h3>
+                                            <span class="text-[10px] font-black text-arbitra-gray uppercase tracking-widest mt-2 block opacity-40" x-text="stat.label"></span>
+                                        </div>
                                     </div>
-                                    
-                                    <div x-show="editing" x-cloak class="admin-overlay">
-                                        <label class="admin-label">Label</label>
-                                        <input @click.stop type="text" x-model="stat.label" class="admin-input">
-                                        <label class="admin-label mt-4">Value</label>
-                                        <input @click.stop type="text" x-model="stat.value" class="admin-input">
-                                        <button @click.stop="editing = false" class="bg-arbitra-emerald text-arbitra-black p-2 rounded mt-4 font-black text-[10px] uppercase">DONE</button>
+
+                                    <!-- Stat Modal (Un-nested from bento-card) -->
+                                    <div x-show="editingStat" 
+                                         x-transition:enter="transition ease-out duration-300"
+                                         x-transition:enter-start="opacity-0"
+                                         x-transition:enter-end="opacity-100"
+                                         x-transition:leave="transition ease-in duration-200"
+                                         x-transition:leave-start="opacity-100"
+                                         x-transition:leave-end="opacity-0"
+                                         x-cloak 
+                                         class="admin-overlay"
+                                         @click.stop="editingStat = false">
+                                        
+                                        <div class="admin-modal max-w-lg" @click.stop
+                                             x-transition:enter="transition ease-out duration-300 transform"
+                                             x-transition:enter-start="opacity-0 scale-95"
+                                             x-transition:enter-end="opacity-100 scale-100"
+                                             x-transition:leave="transition ease-in duration-200 transform"
+                                             x-transition:leave-start="opacity-100 scale-100"
+                                             x-transition:leave-end="opacity-0 scale-95">
+                                            
+                                            <h3 class="text-xl font-black uppercase text-arbitra-emerald mb-8">Edit Highlight Stat</h3>
+                                            
+                                            <div class="space-y-6">
+                                                <div>
+                                                    <label class="admin-label">Stat Label</label>
+                                                    <input type="text" x-model="stat.label" class="admin-input mt-2">
+                                                </div>
+                                                <div>
+                                                    <label class="admin-label">Value (e.g. 7.5%)</label>
+                                                    <input type="text" x-model="stat.value" class="admin-input mt-2 text-2xl font-black text-arbitra-emerald">
+                                                </div>
+                                            </div>
+
+                                            <div class="flex gap-4 mt-10">
+                                                <button @click.stop="editingStat = false" class="flex-1 bg-arbitra-emerald text-arbitra-black py-4 rounded-full font-black text-xs uppercase tracking-widest transition-all hover:scale-105">DONE</button>
+                                                <button @click.stop="editingStat = false" class="px-8 border border-white/10 rounded-full font-bold text-xs">CANCEL</button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </template>
+                        </div>
+                    </div>
+
+                        <!-- Enhanced Modal Edit Overlay (Hero Main) -->
+                        <div x-show="editing" 
+                             x-transition:enter="transition ease-out duration-300"
+                             x-transition:enter-start="opacity-0"
+                             x-transition:enter-end="opacity-100"
+                             x-transition:leave="transition ease-in duration-200"
+                             x-transition:leave-start="opacity-100"
+                             x-transition:leave-end="opacity-0"
+                             x-cloak 
+                             class="admin-overlay" 
+                             @click="editing = false">
+                            
+                            <div class="admin-modal" @click.stop
+                                 x-transition:enter="transition ease-out duration-300 transform"
+                                 x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+                                 x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                                 x-transition:leave="transition ease-in duration-200 transform"
+                                 x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                                 x-transition:leave-end="opacity-0 scale-95 translate-y-4">
+                                
+                                <div class="flex justify-between items-center mb-8">
+                                    <div>
+                                        <h3 class="text-2xl font-black uppercase italic text-arbitra-emerald">Edit Hero Section</h3>
+                                        <p class="text-[10px] text-arbitra-gray font-bold uppercase tracking-widest mt-1">MAIN LANDING HEADER</p>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        <button @click="techy = !techy" class="text-[10px] font-black uppercase text-white/40 hover:text-white border border-white/10 px-4 py-2 rounded-full transition-all" x-text="techy ? 'Standard Mode' : 'JSON Mode'"></button>
+                                        <button @click="editing = false" class="text-arbitra-gray hover:text-white p-2">
+                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div x-show="techy" class="space-y-4">
+                                    <label class="admin-label">Raw JSON Data</label>
+                                    <textarea x-model="JSON.stringify(form, null, 2)" @change="try { form = JSON.parse($event.target.value) } catch(e) { alert('Invalid JSON') }" class="admin-input h-[400px] font-mono text-xs leading-relaxed bg-black/50"></textarea>
+                                </div>
+
+                                <div x-show="!techy" class="space-y-8">
+                                    <div class="grid grid-cols-2 gap-6">
+                                        <div class="col-span-2">
+                                            <label class="admin-label">Internal Section Title</label>
+                                            <input type="text" x-model="title" class="admin-input mt-2">
+                                        </div>
+                                        <div class="col-span-2">
+                                            <label class="admin-label text-arbitra-emerald">Main Hero Title (ITALIC)</label>
+                                            <input type="text" x-model="form.title" class="admin-input mt-2 text-xl font-black italic">
+                                        </div>
+                                        <div class="col-span-2">
+                                            <label class="admin-label">Hero Description</label>
+                                            <textarea x-model="form.description" class="admin-input h-32 mt-2 leading-relaxed"></textarea>
+                                        </div>
+                                        <div>
+                                            <label class="admin-label">Data Source Reference</label>
+                                            <input type="text" x-model="source" class="admin-input mt-2">
+                                        </div>
+                                    </div>
+
+                                    {{-- Popup Editor for Hero --}}
+                                    <div class="mt-12 pt-12 border-t border-white/10">
+                                        <div class="flex items-center justify-between mb-8">
+                                            <div>
+                                                <h4 class="text-sm font-black uppercase tracking-widest text-arbitra-emerald">Interactive Popup Details</h4>
+                                                <p class="text-[9px] text-arbitra-gray font-medium mt-1 uppercase">Configure the details for the motivation popup</p>
+                                            </div>
+                                            <button @click="if(!form.modal_details) form.modal_details = {}; editingModal = !editingModal" class="text-[10px] font-black uppercase px-6 py-2 rounded-full border border-white/10 transition-all" :class="editingModal ? 'bg-arbitra-emerald text-arbitra-black border-arbitra-emerald' : 'bg-white/5 text-white hover:bg-white/10'" x-text="editingModal ? 'Hide Popup Editor' : 'Edit Popup'"></button>
+                                        </div>
+
+                                        <div x-show="editingModal" x-transition class="space-y-8 bg-black/40 p-8 rounded-3xl border border-white/5">
+                                            <!-- Same Category Tab logic for Hero -->
+                                            <div class="flex flex-wrap gap-2 border-b border-white/10 pb-6">
+                                                <template x-for="(tab, index) in modalTabs" :key="index">
+                                                    <div class="flex items-center gap-1 group">
+                                                        <button @click="activeTab = index" 
+                                                                class="text-[10px] font-black uppercase px-5 py-2.5 rounded-xl border transition-all"
+                                                                :class="activeTab === index ? 'bg-arbitra-emerald/10 border-arbitra-emerald text-arbitra-emerald' : 'bg-white/5 border-white/10 text-arbitra-gray hover:text-white'">
+                                                            <span x-text="tab.name"></span>
+                                                        </button>
+                                                    </div>
+                                                </template>
+                                                <button @click="addModalTab()" class="text-[10px] font-black uppercase px-5 py-2.5 rounded-xl border border-dashed border-white/20 text-arbitra-gray hover:border-arbitra-emerald hover:text-white transition-all">+ Add Tab</button>
+                                            </div>
+
+                                            <template x-if="modalTabs[activeTab]">
+                                                <div class="space-y-8">
+                                                    <div class="flex justify-between items-center bg-white/5 -mx-8 -mt-8 mb-8 p-6 rounded-t-3xl border-b border-white/5">
+                                                        <div class="flex items-center gap-6">
+                                                            <div class="space-y-1">
+                                                                <label class="admin-label text-[8px]">Tab Name</label>
+                                                                <input type="text" x-model="modalTabs[activeTab].name" class="bg-transparent border-none p-0 text-white font-black uppercase tracking-tight focus:ring-0 w-48">
+                                                            </div>
+                                                            <div class="h-8 w-px bg-white/10"></div>
+                                                            <div class="space-y-1">
+                                                                <label class="admin-label text-[8px]">Display Style</label>
+                                                                <select x-model="modalTabs[activeTab].type" class="bg-transparent border-none p-0 text-arbitra-emerald font-black uppercase text-[10px] focus:ring-0 cursor-pointer">
+                                                                    <option value="points" class="bg-arbitra-black">Bullet Points</option>
+                                                                    <option value="table" class="bg-arbitra-black">Data Table</option>
+                                                                    <option value="map" class="bg-arbitra-black">Infrastructure Map</option>
+                                                                    <option value="text" class="bg-arbitra-black">Plain Text</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                        <button @click="removeModalTab(activeTab)" class="text-red-500/50 hover:text-red-500 transition-all">
+                                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                                        </button>
+                                                    </div>
+
+                                                    <div x-show="modalTabs[activeTab].type === 'points'" class="space-y-4">
+                                                        <template x-for="(pt, ptIdx) in modalTabs[activeTab].data" :key="ptIdx">
+                                                            <div class="flex gap-4 items-center group">
+                                                                <div class="w-1.5 h-1.5 rounded-full bg-arbitra-emerald"></div>
+                                                                <input type="text" x-model="modalTabs[activeTab].data[ptIdx]" class="admin-input flex-1 font-medium">
+                                                                <button @click="modalTabs[activeTab].data.splice(ptIdx, 1)" class="opacity-0 group-hover:opacity-100 text-red-500 p-2">×</button>
+                                                            </div>
+                                                        </template>
+                                                        <button @click="modalTabs[activeTab].data.push('New detail point...')" class="w-full py-3 border-2 border-dashed border-white/5 rounded-2xl text-[10px] font-black uppercase text-arbitra-gray hover:border-arbitra-emerald/40 hover:text-white transition-all">+ Add New Point</button>
+                                                    </div>
+
+                                                    <div x-show="modalTabs[activeTab].type === 'table'" class="space-y-3">
+                                                        <template x-for="(row, rowIdx) in modalTabs[activeTab].data" :key="rowIdx">
+                                                            <div class="flex gap-4 items-center">
+                                                                <input type="text" x-model="row.key" placeholder="Metric" class="admin-input flex-1 font-bold">
+                                                                <input type="text" x-model="row.value" placeholder="Value" class="admin-input flex-1 text-arbitra-emerald font-black">
+                                                                <button @click="modalTabs[activeTab].data.splice(rowIdx, 1)" class="text-red-500 p-1">×</button>
+                                                            </div>
+                                                        </template>
+                                                        <button @click="modalTabs[activeTab].data.push({key: '', value: ''})" class="w-full py-3 border-2 border-dashed border-white/5 rounded-2xl text-[10px] font-black uppercase text-arbitra-gray hover:border-arbitra-emerald/40 hover:text-white transition-all">+ Add Row</button>
+                                                    </div>
+                                                    
+                                                    <div x-show="modalTabs[activeTab].type === 'map'" class="space-y-4">
+                                                        <template x-for="(pt, ptIdx) in modalTabs[activeTab].data" :key="ptIdx">
+                                                            <div class="grid grid-cols-12 gap-3 items-center">
+                                                                <div class="col-span-6"><label class="text-[8px] font-black uppercase mb-1 block tracking-wider">Label</label><input type="text" x-model="pt.label" class="admin-input text-xs"></div>
+                                                                <div class="col-span-2"><label class="text-[8px] font-black uppercase mb-1 block">LAT</label><input type="number" step="0.0001" x-model.number="pt.lat" class="admin-input text-xs"></div>
+                                                                <div class="col-span-2"><label class="text-[8px] font-black uppercase mb-1 block">LNG</label><input type="number" step="0.0001" x-model.number="pt.lng" class="admin-input text-xs"></div>
+                                                                <div class="col-span-2 flex justify-end"><button @click="modalTabs[activeTab].data.splice(ptIdx, 1)" class="text-red-500 mt-4">×</button></div>
+                                                            </div>
+                                                        </template>
+                                                        <button @click="modalTabs[activeTab].data.push({label: 'New Infrastructure', lat: 10.7, lng: 122.5})" class="w-full py-3 border-2 border-dashed border-white/5 rounded-2xl text-[10px] font-black uppercase text-arbitra-gray hover:border-arbitra-emerald/40 hover:text-white transition-all">+ Add Map Point</button>
+                                                    </div>
+
+                                                    <div x-show="modalTabs[activeTab].type === 'text'">
+                                                        <textarea x-model="modalTabs[activeTab].data" class="admin-input h-32 leading-relaxed" placeholder="Type plain text info here..."></textarea>
+                                                    </div>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="flex gap-4 mt-12 pt-8 border-t border-white/10 sticky bottom-0 bg-[#0A0A0A] pb-4">
+                                    <button @click.stop="save({{ $hero->id }}, {section_title: title, content: form, source: source}); editing = false" class="bg-arbitra-emerald text-arbitra-black px-10 py-4 rounded-full font-black text-xs uppercase tracking-widest hover:scale-105 transition-all shadow-lg shadow-arbitra-emerald/20">SAVE HERO</button>
+                                    <div class="flex-1"></div>
+                                    <button @click.stop="editing = false" class="text-white/60 px-8 py-4 rounded-full font-black text-xs uppercase tracking-widest hover:text-white transition-all border border-white/10">CANCEL</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 @else
@@ -245,10 +465,72 @@
                     title: @js($content->section_title), 
                     source: @js($content->source),
                     modalJson: JSON.stringify(@js($content->content['modal_details'] ?? null), null, 4),
+                    modalTabs: [],
+                    activeTab: 0,
+                    parseModalDetails() {
+                        const details = this.form.modal_details || {};
+                        this.modalTabs = Object.entries(details).map(([name, value]) => {
+                            let type = 'text';
+                            let data = value;
+                            
+                            if (value && typeof value === 'object') {
+                                if (value.Points && Array.isArray(value.Points)) {
+                                    type = 'points';
+                                    data = [...value.Points];
+                                } else if (value['Map Points'] && Array.isArray(value['Map Points'])) {
+                                    type = 'map';
+                                    data = value['Map Points'].map(p => ({...p}));
+                                } else if (Array.isArray(value)) {
+                                    if (value.length > 0 && typeof value[0] === 'object' && value[0].lat !== undefined) {
+                                        type = 'map';
+                                        data = value.map(p => ({...p}));
+                                    } else {
+                                        type = 'points';
+                                        data = [...value];
+                                    }
+                                } else {
+                                    type = 'table';
+                                    data = Object.entries(value).map(([k, v]) => ({key: k, value: v}));
+                                }
+                            }
+                            return { name, type, data };
+                        });
+                    },
+                    syncModalDetails() {
+                        const details = {};
+                        this.modalTabs.forEach(tab => {
+                            if (tab.type === 'points') {
+                                details[tab.name] = { Points: tab.data };
+                            } else if (tab.type === 'table') {
+                                const tableObj = {};
+                                tab.data.forEach(row => { if(row.key) tableObj[row.key] = row.value });
+                                details[tab.name] = tableObj;
+                            } else if (tab.type === 'map') {
+                                details[tab.name] = { 'Map Points': tab.data };
+                            } else {
+                                details[tab.name] = tab.data;
+                            }
+                        });
+                        this.form.modal_details = details;
+                        this.modalJson = JSON.stringify(details, null, 4);
+                    },
+                    addModalTab() {
+                        this.modalTabs.push({ name: 'New Section', type: 'points', data: [] });
+                        this.activeTab = this.modalTabs.length - 1;
+                    },
+                    removeModalTab(index) {
+                        if(confirm('Remove this entire popup section?')) {
+                            this.modalTabs.splice(index, 1);
+                            if(this.activeTab >= this.modalTabs.length) this.activeTab = Math.max(0, this.modalTabs.length - 1);
+                        }
+                    },
                     init() {
+                        this.parseModalDetails();
                         this.$watch('form.modal_details', (val) => {
                             this.modalJson = JSON.stringify(val, null, 4);
                         });
+                        this.$watch('modalTabs', () => this.syncModalDetails(), { deep: true });
+                        this.$watch('techy', (val) => { if(!val) this.parseModalDetails() });
                     }
                 }" 
                 class="scroll-mt-32 pb-20 group relative">
@@ -343,24 +625,70 @@
                                 <div class="main-chart w-full h-64"></div>
                             </div>
                         </div>
+                    @elseif($content->type === 'list')
+                        <div @click="editing = true" class="cursor-pointer">
+                            <div class="flex items-center gap-4 mb-8">
+                                <span class="bg-arbitra-emerald/10 text-arbitra-emerald px-3 py-1 rounded font-black text-[10px] uppercase">POINT LIST</span>
+                                <h2 class="text-2xl font-black uppercase tracking-tight" x-text="title"></h2>
+                                <button @click.stop="deleteSection({{ $content->id }})" class="opacity-0 group-hover:opacity-100 text-arbitra-gray hover:text-red-500 transition-all">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                </button>
+                            </div>
+                            <div class="space-y-4">
+                                <template x-for="item in form.items">
+                                    <div class="flex items-center gap-4 p-5 bg-white/5 rounded-2xl border border-white/10 hover:border-arbitra-emerald/30">
+                                        <div class="w-2 h-2 rounded-full bg-arbitra-emerald shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>
+                                        <span class="text-white font-bold" x-text="item"></span>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
                     @endif
 
-                    <!-- Edit Overlay -->
-                    <div x-show="editing" x-cloak class="admin-overlay overflow-y-auto" @click.stop>
-                        <div class="flex justify-between items-center mb-6">
-                            <h3 class="text-xl font-black uppercase italic text-arbitra-emerald">Editing Section</h3>
-                            <button @click="techy = !techy" class="text-[10px] font-black uppercase text-white/40 hover:text-white border border-white/10 px-3 py-1 rounded" x-text="techy ? 'Switch to Easy Mode' : 'Switch to Techy Mode'"></button>
-                        </div>
+                    <!-- Enhanced Modal Edit Overlay -->
+                    <div x-show="editing" 
+                         x-transition:enter="transition ease-out duration-300"
+                         x-transition:enter-start="opacity-0"
+                         x-transition:enter-end="opacity-100"
+                         x-transition:leave="transition ease-in duration-200"
+                         x-transition:leave-start="opacity-100"
+                         x-transition:leave-end="opacity-0"
+                         x-cloak 
+                         class="admin-overlay" 
+                         @click="editing = false">
                         
-                        <label class="admin-label">Section Title</label>
-                        <input type="text" x-model="title" class="admin-input mb-4">
-                        
-                        <div x-show="techy">
-                            <label class="admin-label">Raw JSON Data</label>
-                            <textarea x-model="JSON.stringify(form, null, 2)" @change="try { form = JSON.parse($event.target.value) } catch(e) { alert('Invalid JSON') }" class="admin-input h-64 font-mono text-[10px]"></textarea>
-                        </div>
+                        <div class="admin-modal" @click.stop
+                             x-transition:enter="transition ease-out duration-300 transform"
+                             x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+                             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                             x-transition:leave="transition ease-in duration-200 transform"
+                             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                             x-transition:leave-end="opacity-0 scale-95 translate-y-4">
+                            
+                            <div class="flex justify-between items-center mb-8">
+                                <div>
+                                    <h3 class="text-2xl font-black uppercase italic text-arbitra-emerald">Edit Section</h3>
+                                    <p class="text-[10px] text-arbitra-gray font-bold uppercase tracking-widest mt-1" x-text="'TYPE: ' + @js($content->type)"></p>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <button @click="techy = !techy" class="text-[10px] font-black uppercase text-white/40 hover:text-white border border-white/10 px-4 py-2 rounded-full transition-all" x-text="techy ? 'Standard Mode' : 'JSON Mode'"></button>
+                                    <button @click="editing = false" class="text-arbitra-gray hover:text-white p-2">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-8">
+                                <label class="admin-label">Section Title</label>
+                                <input type="text" x-model="title" class="admin-input mt-2 text-lg font-bold">
+                            </div>
+                            
+                            <div x-show="techy" class="space-y-4">
+                                <label class="admin-label">Raw JSON Data</label>
+                                <textarea x-model="JSON.stringify(form, null, 2)" @change="try { form = JSON.parse($event.target.value) } catch(e) { alert('Invalid JSON') }" class="admin-input h-[400px] font-mono text-xs leading-relaxed bg-black/50"></textarea>
+                            </div>
 
-                        <div x-show="!techy" class="space-y-6">
+                            <div x-show="!techy" class="space-y-8">
                             @if($content->type === 'stats_grid')
                                 <div class="space-y-4">
                                     <template x-for="(stat, index) in form.stats" :key="index">
@@ -383,22 +711,71 @@
                             @elseif($content->type === 'grid')
                                 <div class="space-y-4">
                                     <template x-for="(item, index) in form.items" :key="index">
-                                        <div class="flex gap-4 items-start bg-white/5 p-4 rounded-xl">
-                                            <div class="flex-1 space-y-2">
-                                                <label class="admin-label">Name</label>
-                                                <input type="text" x-model="item.name" class="admin-input">
-                                                <label class="admin-label">Details</label>
-                                                <textarea x-model="item.details" class="admin-input h-20"></textarea>
+                                        <div class="bg-white/5 p-4 rounded-xl space-y-4">
+                                            <div class="flex gap-4 items-start">
+                                                <div class="flex-1 space-y-2">
+                                                    <label class="admin-label">Name</label>
+                                                    <input type="text" x-model="item.name" class="admin-input">
+                                                    <label class="admin-label">Details</label>
+                                                    <textarea x-model="item.details" class="admin-input h-20"></textarea>
+                                                </div>
+                                                <button @click="form.items.splice(index, 1)" class="p-2 text-red-500 hover:bg-red-500/10 rounded">
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                                </button>
                                             </div>
-                                            <button @click="form.items.splice(index, 1)" class="p-2 text-red-500 hover:bg-red-500/10 rounded">
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                            </button>
+
+                                            {{-- Simplified Item-level Popup Editor --}}
+                                            <div class="pt-4 border-t border-white/5">
+                                                <div class="flex items-center justify-between mb-3">
+                                                    <span class="text-[8px] font-black uppercase text-arbitra-emerald tracking-widest">Item Pop-up Details</span>
+                                                    <button @click="if(!item.modal_details) item.modal_details = {}; item.showEditor = !item.showEditor" 
+                                                            class="text-[8px] font-black uppercase bg-white/5 border border-white/10 px-3 py-1 rounded-full hover:bg-arbitra-emerald hover:text-arbitra-black transition-all"
+                                                            x-text="item.showEditor ? 'Hide' : 'Edit Pop-up'"></button>
+                                                </div>
+
+                                                <div x-show="item.showEditor" class="space-y-4 bg-black/40 p-4 rounded-xl border border-white/5">
+                                                    <template x-if="item.modal_details && item.modal_details['Map Points']">
+                                                        <div class="space-y-3">
+                                                            <template x-for="(pt, ptIdx) in item.modal_details['Map Points']" :key="ptIdx">
+                                                                <div class="flex gap-2">
+                                                                    <input type="text" x-model="pt.label" placeholder="Label" class="admin-input text-[10px] flex-1">
+                                                                    <input type="number" step="0.0001" x-model.number="pt.lat" placeholder="Lat" class="admin-input text-[10px] w-16">
+                                                                    <input type="number" step="0.0001" x-model.number="pt.lng" placeholder="Lng" class="admin-input text-[10px] w-16">
+                                                                    <button @click="item.modal_details['Map Points'].splice(ptIdx, 1)" class="text-red-500">×</button>
+                                                                </div>
+                                                            </template>
+                                                            <button @click="item.modal_details['Map Points'].push({label: 'New Point', lat: 10.7, lng: 122.5})" class="w-full py-1.5 border border-dashed border-white/10 rounded text-[8px] uppercase font-black text-arbitra-gray hover:text-white">+ Add Map Point</button>
+                                                        </div>
+                                                    </template>
+
+                                                    <template x-if="!item.modal_details || !item.modal_details['Map Points']">
+                                                        <div class="py-2">
+                                                            <p class="text-[8px] text-arbitra-gray italic mb-4">No map points found for this item.</p>
+                                                            <div class="flex gap-3">
+                                                                <button @click="item.modal_details = {'Map Points': [{label: 'Center Point', lat: 10.7, lng: 122.5}]}" class="flex-1 py-2 bg-white/5 rounded-lg text-[8px] font-black hover:bg-arbitra-emerald/20 hover:text-arbitra-emerald transition-all border border-white/5">INIT INFRA MAP</button>
+                                                                <button @click="item.showEditor = false; techy = true" class="flex-1 py-2 bg-white/5 rounded-lg text-[8px] font-black hover:bg-white/10 transition-all border border-white/5 uppercase tracking-widest">Use Techy Mode</button>
+                                                            </div>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                            </div>
                                         </div>
                                     </template>
-                                    <button @click="form.items.push({name: 'New Item', details: 'Description...'})" class="w-full py-2 border-2 border-dashed border-white/10 rounded-xl text-arbitra-gray hover:border-arbitra-emerald hover:text-white transition-all font-bold text-xs uppercase">+ Add New Item</button>
+                                    <button @click="form.items.push({name: 'New Item', details: 'Description...', modal_details: {}})" class="w-full py-2 border-2 border-dashed border-white/10 rounded-xl text-arbitra-gray hover:border-arbitra-emerald hover:text-white transition-all font-bold text-xs uppercase">+ Add New Item</button>
                                 </div>
                             @elseif($content->type === 'chart')
                                 <div class="space-y-6">
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="admin-label">Chart Type</label>
+                                            <select x-model="form.chart_type" class="admin-input">
+                                                <option value="bar">Bar Chart</option>
+                                                <option value="line">Line Chart</option>
+                                                <option value="area">Area Chart</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
                                     <div class="bg-black/40 p-6 rounded-2xl border border-white/5"
                                          x-init="
                                             let chart = null;
@@ -460,6 +837,18 @@
                                         </div>
                                     </div>
                                 </div>
+                            @elseif($content->type === 'list')
+                                <div class="space-y-4">
+                                    <template x-for="(item, index) in form.items" :key="index">
+                                        <div class="flex gap-4 items-center bg-white/5 p-4 rounded-xl">
+                                            <input type="text" x-model="form.items[index]" class="admin-input flex-1">
+                                            <button @click="form.items.splice(index, 1)" class="p-2 text-red-500 hover:bg-red-500/10 rounded">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                            </button>
+                                        </div>
+                                    </template>
+                                    <button @click="form.items.push('New Strategy Item')" class="w-full py-2 border-2 border-dashed border-white/10 rounded-xl text-arbitra-gray hover:border-arbitra-emerald hover:text-white transition-all font-bold text-xs uppercase">+ Add New Item</button>
+                                </div>
                             @elseif($content->type === 'marquee')
                                 <div class="space-y-4">
                                     <label class="admin-label">Partners / Logos (Marquee)</label>
@@ -494,22 +883,93 @@
                             @endif
 
                             {{-- Dynamic Popup (Modal) Editor --}}
-                            <div class="mt-8 pt-8 border-t border-white/10">
-                                <div class="flex items-center justify-between mb-6">
-                                    <h4 class="text-xs font-black uppercase tracking-widest text-arbitra-emerald">Popup Details (Interactive Modal)</h4>
-                                    <button @click="if(!form.modal_details) form.modal_details = {}; editingModal = true" x-show="!editingModal" class="text-[10px] font-black uppercase bg-white/5 px-4 py-1.5 rounded-full border border-white/10 hover:bg-arbitra-emerald hover:text-arbitra-black transition-all">Enable/Edit Pop-up</button>
+                            <div class="mt-12 pt-12 border-t border-white/10">
+                                <div class="flex items-center justify-between mb-8">
+                                    <div>
+                                        <h4 class="text-sm font-black uppercase tracking-widest text-arbitra-emerald">Interactive Popup Details</h4>
+                                        <p class="text-[9px] text-arbitra-gray font-medium mt-1 uppercase">Configure the modal that appears when users click this section</p>
+                                    </div>
+                                    <button @click="if(!form.modal_details) form.modal_details = {}; editingModal = !editingModal" class="text-[10px] font-black uppercase px-6 py-2 rounded-full border border-white/10 transition-all" :class="editingModal ? 'bg-arbitra-emerald text-arbitra-black border-arbitra-emerald' : 'bg-white/5 text-white hover:bg-white/10'" x-text="editingModal ? 'Hide Popup Editor' : 'Edit Popup'"></button>
                                 </div>
 
-                                <div x-show="editingModal" class="space-y-6 bg-black/20 p-6 rounded-2xl border border-white/5">
-                                    <div class="flex justify-between items-center bg-white/5 -m-6 mb-6 p-4 rounded-t-2xl">
-                                        <span class="text-[10px] font-bold text-arbitra-gray uppercase">JSON Data Structure</span>
-                                        <button @click="editingModal = false" class="text-[10px] font-black text-arbitra-emerald">HIDE EDITOR</button>
+                                <div x-show="editingModal" x-transition class="space-y-8 bg-black/40 p-8 rounded-3xl border border-white/5">
+                                    <!-- Category Tabs -->
+                                    <div class="flex flex-wrap gap-2 border-b border-white/10 pb-6">
+                                        <template x-for="(tab, index) in modalTabs" :key="index">
+                                            <div class="flex items-center gap-1 group">
+                                                <button @click="activeTab = index" 
+                                                        class="text-[10px] font-black uppercase px-5 py-2.5 rounded-xl border transition-all"
+                                                        :class="activeTab === index ? 'bg-arbitra-emerald/10 border-arbitra-emerald text-arbitra-emerald' : 'bg-white/5 border-white/10 text-arbitra-gray hover:text-white'">
+                                                    <span x-text="tab.name"></span>
+                                                </button>
+                                            </div>
+                                        </template>
+                                        <button @click="addModalTab()" class="text-[10px] font-black uppercase px-5 py-2.5 rounded-xl border border-dashed border-white/20 text-arbitra-gray hover:border-arbitra-emerald hover:text-white transition-all">+ Add Tab</button>
                                     </div>
-                                    <textarea x-model="modalJson" 
-                                              @input="try { form.modal_details = JSON.parse($event.target.value) } catch(e) {}"
-                                              class="admin-input h-64 font-mono text-xs" 
-                                              placeholder='{"Why Invest?": {"Points": ["Point 1", "Point 2"]}}'></textarea>
-                                    <p class="text-[10px] text-arbitra-gray/50 italic">Note: Advanced users only. Editing raw JSON allows full control over maps, lists, and grids in the popups.</p>
+
+                                    <!-- Active Tab Editor -->
+                                    <template x-if="modalTabs[activeTab]">
+                                        <div class="space-y-8">
+                                            <div class="flex justify-between items-center bg-white/5 -mx-8 -mt-8 mb-8 p-6 rounded-t-3xl border-b border-white/5">
+                                                <div class="flex items-center gap-6">
+                                                    <div class="space-y-1">
+                                                        <label class="admin-label text-[8px]">Tab Name</label>
+                                                        <input type="text" x-model="modalTabs[activeTab].name" class="bg-transparent border-none p-0 text-white font-black uppercase tracking-tight focus:ring-0 w-48">
+                                                    </div>
+                                                    <div class="h-8 w-px bg-white/10"></div>
+                                                    <div class="space-y-1">
+                                                        <label class="admin-label text-[8px]">Display Style</label>
+                                                        <select x-model="modalTabs[activeTab].type" class="bg-transparent border-none p-0 text-arbitra-emerald font-black uppercase text-[10px] focus:ring-0 cursor-pointer">
+                                                            <option value="points" class="bg-arbitra-black">Bullet Points</option>
+                                                            <option value="table" class="bg-arbitra-black">Data Table</option>
+                                                            <option value="map" class="bg-arbitra-black">Infrastructure Map</option>
+                                                            <option value="text" class="bg-arbitra-black">Plain Text</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <button @click="removeModalTab(activeTab)" class="text-red-500/50 hover:text-red-500 transition-all">
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                                </button>
+                                            </div>
+
+                                            <div x-show="modalTabs[activeTab].type === 'points'" class="space-y-4">
+                                                <template x-for="(pt, ptIdx) in modalTabs[activeTab].data" :key="ptIdx">
+                                                    <div class="flex gap-4 items-center group">
+                                                        <div class="w-1.5 h-1.5 rounded-full bg-arbitra-emerald"></div>
+                                                        <input type="text" x-model="modalTabs[activeTab].data[ptIdx]" class="admin-input flex-1">
+                                                        <button @click="modalTabs[activeTab].data.splice(ptIdx, 1)" class="opacity-0 group-hover:opacity-100 text-red-500 p-2">×</button>
+                                                    </div>
+                                                </template>
+                                                <button @click="modalTabs[activeTab].data.push('New detail point...')" class="w-full py-3 border-2 border-dashed border-white/5 rounded-2xl text-[10px] font-black uppercase text-arbitra-gray hover:border-arbitra-emerald/40 hover:text-white transition-all">+ Add New Point</button>
+                                            </div>
+
+                                            <div x-show="modalTabs[activeTab].type === 'table'" class="space-y-3">
+                                                <template x-for="(row, rowIdx) in modalTabs[activeTab].data" :key="rowIdx">
+                                                    <div class="flex gap-4 items-center">
+                                                        <input type="text" x-model="row.key" placeholder="Metric Name" class="admin-input flex-1 font-bold">
+                                                        <input type="text" x-model="row.value" placeholder="Value" class="admin-input flex-1 text-arbitra-emerald font-black">
+                                                        <button @click="modalTabs[activeTab].data.splice(rowIdx, 1)" class="text-red-500 p-1">×</button>
+                                                    </div>
+                                                </template>
+                                                <button @click="modalTabs[activeTab].data.push({key: '', value: ''})" class="w-full py-3 border-2 border-dashed border-white/5 rounded-2xl text-[10px] font-black uppercase text-arbitra-gray hover:border-arbitra-emerald/40 hover:text-white transition-all">+ Add Table Row</button>
+                                            </div>
+
+                                            <div x-show="modalTabs[activeTab].type === 'map'" class="space-y-4">
+                                                <template x-for="(pt, ptIdx) in modalTabs[activeTab].data" :key="ptIdx">
+                                                    <div class="grid grid-cols-12 gap-3 items-center">
+                                                        <div class="col-span-6"><label class="text-[8px] font-black uppercase mb-1 block">Location Label</label><input type="text" x-model="pt.label" class="admin-input text-xs"></div>
+                                                        <div class="col-span-2"><label class="text-[8px] font-black uppercase mb-1 block">LAT</label><input type="number" step="0.0001" x-model.number="pt.lat" class="admin-input text-xs"></div>
+                                                        <div class="col-span-2"><label class="text-[8px] font-black uppercase mb-1 block">LNG</label><input type="number" step="0.0001" x-model.number="pt.lng" class="admin-input text-xs"></div>
+                                                        <div class="col-span-2 flex justify-end"><button @click="modalTabs[activeTab].data.splice(ptIdx, 1)" class="text-red-500 mt-4">×</button></div>
+                                                    </div>
+                                                </template>
+                                                <button @click="modalTabs[activeTab].data.push({label: 'New Infrastructure', lat: 10.7, lng: 122.5})" class="w-full py-3 border-2 border-dashed border-white/5 rounded-2xl text-[10px] font-black uppercase text-arbitra-gray hover:border-arbitra-emerald/40 hover:text-white transition-all">+ Add Map Point</button>
+                                            </div>
+                                            
+                                            <div x-show="modalTabs[activeTab].type === 'text'">
+                                            </div>
+                                        </div>
+                                    </template>
                                 </div>
                             </div>
                         </div>
@@ -540,6 +1000,10 @@
                 <button @click="addSection('chart')" class="bento-card p-10 border-dashed border-white/10 flex flex-col items-center justify-center opacity-40 hover:opacity-100 transition-all">
                     <span class="text-3xl mb-2">+</span>
                     <span class="font-black text-[10px] uppercase">Add Chart</span>
+                </button>
+                <button @click="addSection('list')" class="bento-card p-10 border-dashed border-white/10 flex flex-col items-center justify-center opacity-40 hover:opacity-100 transition-all">
+                    <span class="text-3xl mb-2">+</span>
+                    <span class="font-black text-[10px] uppercase">Add Point List</span>
                 </button>
                 <button @click="addSection('metadata')" class="bento-card p-10 border-dashed border-white/10 flex flex-col items-center justify-center opacity-40 hover:opacity-100 transition-all">
                     <span class="text-3xl mb-2">+</span>
@@ -711,7 +1175,8 @@
                         hero: 'New Hero Section',
                         stats_grid: 'New Stats Overview',
                         grid: 'New Industry Focus',
-                        chart: 'New Performance Chart'
+                        chart: 'New Performance Chart',
+                        list: 'New Strategy List'
                     };
                     
                     const defaultContent = {
@@ -719,6 +1184,7 @@
                         stats_grid: { stats: [{label: 'Stat 1', value: 'Value 1'}] },
                         grid: { items: [{name: 'Feature Name', details: 'Detailed description goes here'}] },
                         chart: { chart_type: 'bar', series: [{name: 'Data', data: [10, 20, 30]}], categories: ['A', 'B', 'C'] },
+                        list: { items: ['Item 1', 'Item 2'] },
                         marquee: { items: ['FIRM 1', 'FIRM 2', 'FIRM 3'] },
                         cta: { title: 'Ready to Lead?', description: 'Join over 85,000 thriving businesses.' },
                         metadata: { site_title: 'Western Visayas: Investment Profile', browser_tab_title: 'WV Region 6 Profile', logo_text: 'DTI Region 6' }
