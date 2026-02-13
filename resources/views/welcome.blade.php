@@ -567,7 +567,14 @@
                                     },
                                     yaxis: { labels: { style: { colors: '#888888', fontWeight: 600, fontSize: '14px' } } },
                                     colors: {!! $isDistributed && count($colorArray) > 0 ? json_encode($colorArray) : "['#10b981', '#888888', '#555555']" !!},
-                                    stroke: { width: 0 },
+                                    stroke: { 
+                                        show: true, 
+                                        width: {{ ($content->content['chart_type'] ?? 'bar') === 'bar' ? 0 : 3 }},
+                                        curve: 'smooth' 
+                                    },
+                                    fill: {
+                                        opacity: {{ ($content->content['chart_type'] ?? 'bar') === 'area' ? 0.3 : 1 }}
+                                    },
                                     dataLabels: { enabled: false },
                                     tooltip: { theme: 'dark' }
                                 };

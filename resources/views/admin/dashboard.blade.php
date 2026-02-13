@@ -79,6 +79,10 @@
             color: white;
             width: 100%;
         }
+        .admin-input option {
+            background: #0A0A0A;
+            color: white;
+        }
         .admin-label {
             font-size: 10px;
             font-weight: 800;
@@ -139,10 +143,10 @@
                         editing: false, 
                         techy: false,
                         editingModal: false,
-                        form: @js($hero->content), 
-                        title: @js($hero->section_title), 
-                        source: @js($hero->source),
-                        modalJson: JSON.stringify(@js($hero->content['modal_details'] ?? null), null, 4),
+                        form: JSON.parse($el.dataset.form), 
+                        title: $el.dataset.title, 
+                        source: $el.dataset.source,
+                        modalJson: '',
                         modalTabs: [],
                         activeTab: 0,
                         parseModalDetails() {
@@ -201,16 +205,20 @@
                                 this.modalTabs.splice(index, 1);
                                 if(this.activeTab >= this.modalTabs.length) this.activeTab = Math.max(0, this.modalTabs.length - 1);
                             }
-                        },
-                        init() {
-                            this.parseModalDetails();
-                            this.$watch('form.modal_details', (val) => {
-                                this.modalJson = JSON.stringify(val, null, 4);
-                            });
-                            this.$watch('modalTabs', () => this.syncModalDetails(), { deep: true });
-                            this.$watch('techy', (val) => { if(!val) this.parseModalDetails() });
                         }
-                    }">
+                    }"
+                    data-form="{{ json_encode($hero->content) }}"
+                    data-title="{{ $hero->section_title }}"
+                    data-source="{{ $hero->source }}"
+                    x-init="
+                        modalJson = JSON.stringify(form.modal_details || null, null, 4);
+                        parseModalDetails();
+                        $watch('form.modal_details', (val) => {
+                            modalJson = JSON.stringify(val, null, 4);
+                        });
+                        $watch('modalTabs', () => syncModalDetails(), { deep: true });
+                        $watch('techy', (val) => { if(!val) parseModalDetails() });
+                    ">
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 relative">
                         <!-- Hero Content Preview (Match Public Site) -->
                         <div @click="editing = true" class="lg:col-span-2 bento-card p-12 flex flex-col justify-center bg-gradient-to-br from-arbitra-dark to-arbitra-black cursor-pointer group hover:border-arbitra-emerald/60 transition-all relative overflow-hidden">
@@ -324,7 +332,7 @@
                                 
                                 <div x-show="techy" class="space-y-4">
                                     <label class="admin-label">Raw JSON Data</label>
-                                    <textarea x-model="JSON.stringify(form, null, 2)" @change="try { form = JSON.parse($event.target.value) } catch(e) { alert('Invalid JSON') }" class="admin-input h-[400px] font-mono text-xs leading-relaxed bg-black/50"></textarea>
+                                    <textarea x-model="JSON.stringify(form, null, 2)" @change="form = safeParse($event.target.value, form)" class="admin-input h-[400px] font-mono text-xs leading-relaxed bg-black/50"></textarea>
                                 </div>
 
                                 <div x-show="!techy" class="space-y-8">
@@ -461,12 +469,14 @@
                     editing: false, 
                     techy: false,
                     editingModal: false,
-                    form: @js($content->content), 
-                    title: @js($content->section_title), 
-                    source: @js($content->source),
-                    modalJson: JSON.stringify(@js($content->content['modal_details'] ?? null), null, 4),
+                    form: JSON.parse($el.dataset.form), 
+                    title: $el.dataset.title, 
+                    source: $el.dataset.source,
+                    modalJson: '',
                     modalTabs: [],
                     activeTab: 0,
+                    mainChartInstance: null,
+                    previewChartInstance: null,
                     parseModalDetails() {
                         const details = this.form.modal_details || {};
                         this.modalTabs = Object.entries(details).map(([name, value]) => {
@@ -523,16 +533,20 @@
                             this.modalTabs.splice(index, 1);
                             if(this.activeTab >= this.modalTabs.length) this.activeTab = Math.max(0, this.modalTabs.length - 1);
                         }
-                    },
-                    init() {
-                        this.parseModalDetails();
-                        this.$watch('form.modal_details', (val) => {
-                            this.modalJson = JSON.stringify(val, null, 4);
-                        });
-                        this.$watch('modalTabs', () => this.syncModalDetails(), { deep: true });
-                        this.$watch('techy', (val) => { if(!val) this.parseModalDetails() });
                     }
-                }" 
+                }"
+                data-form="{{ json_encode($content->content) }}"
+                data-title="{{ $content->section_title }}"
+                data-source="{{ $content->source }}"
+                x-init="
+                    modalJson = JSON.stringify(form.modal_details || null, null, 4);
+                    parseModalDetails();
+                    $watch('form.modal_details', (val) => {
+                        modalJson = JSON.stringify(val, null, 4);
+                    });
+                    $watch('modalTabs', () => syncModalDetails(), { deep: true });
+                    $watch('techy', (val) => { if(!val) parseModalDetails() });
+                "
                 class="scroll-mt-32 pb-20 group relative">
                     
                     @if($content->type === 'stats_grid')
@@ -608,21 +622,19 @@
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                 </button>
                             </div>
-                            <div class="bg-white/5 p-8 rounded-2xl border border-white/10 hover:border-arbitra-emerald/40" 
+                             <div class="bg-white/5 p-8 rounded-2xl border border-white/10 hover:border-arbitra-emerald/40" 
                                  x-init="
-                                    const options = {
-                                        series: @json($content->content['series'] ?? []),
-                                        chart: { type: '{{ $content->content['chart_type'] ?? 'bar' }}', height: 250, toolbar: {show: false}, background: 'transparent' },
-                                        theme: { mode: 'dark' },
-                                        xaxis: { categories: @json($content->content['categories'] ?? []), labels: {style: {colors: '#888'}} },
-                                        yaxis: { labels: {style: {colors: '#888'}} },
-                                        colors: ['#10b981'],
-                                        plotOptions: { bar: { borderRadius: 4, distributed: {{ count($content->content['series'] ?? []) <= 1 ? 'true' : 'false' }} } }
-                                    };
-                                    const chart = new ApexCharts($el.querySelector('.main-chart'), options);
-                                    chart.render();
+                                    this.mainChartInstance = renderChart($el.querySelector('.main-chart'), form.chart_type, form.series, form.categories);
+                                    $watch('form.series', (val) => { if (this.mainChartInstance) this.mainChartInstance.updateSeries(JSON.parse(JSON.stringify(val))) }, { deep: true });
+                                    $watch('form.categories', (val) => { if (this.mainChartInstance) this.mainChartInstance.updateOptions({ xaxis: { categories: val } }) });
+                                    $watch('form.chart_type', (val) => {
+                                        if (this.mainChartInstance) {
+                                            this.mainChartInstance.destroy();
+                                            this.mainChartInstance = renderChart($el.querySelector('.main-chart'), val, form.series, form.categories);
+                                        }
+                                    });
                                  ">
-                                <div class="main-chart w-full h-64"></div>
+                                <div class="main-chart w-full h-[450px]"></div>
                             </div>
                         </div>
                     @elseif($content->type === 'list')
@@ -685,7 +697,7 @@
                             
                             <div x-show="techy" class="space-y-4">
                                 <label class="admin-label">Raw JSON Data</label>
-                                <textarea x-model="JSON.stringify(form, null, 2)" @change="try { form = JSON.parse($event.target.value) } catch(e) { alert('Invalid JSON') }" class="admin-input h-[400px] font-mono text-xs leading-relaxed bg-black/50"></textarea>
+                                <textarea x-model="JSON.stringify(form, null, 2)" @change="form = safeParse($event.target.value, form)" class="admin-input h-[400px] font-mono text-xs leading-relaxed bg-black/50"></textarea>
                             </div>
 
                             <div x-show="!techy" class="space-y-8">
@@ -775,31 +787,25 @@
                                             </select>
                                         </div>
                                     </div>
-                                    
-                                    <div class="bg-black/40 p-6 rounded-2xl border border-white/5"
+                                                                       <div class="bg-black/40 p-6 rounded-2xl border border-white/5"
                                          x-init="
-                                            let chart = null;
-                                            $watch('editing', (val) => {
-                                                if (val && !chart) {
-                                                    setTimeout(() => {
-                                                        const options = {
-                                                            series: JSON.parse(JSON.stringify(form.series)),
-                                                            chart: { type: 'bar', height: 200, animations: {enabled: false}, toolbar: {show: false}, background: 'transparent' },
-                                                            theme: { mode: 'dark' },
-                                                            xaxis: { categories: JSON.parse(JSON.stringify(form.categories)), labels: {style: {colors: '#888'}} },
-                                                            colors: ['#10b981'],
-                                                            plotOptions: { bar: { borderRadius: 4 } }
-                                                        };
-                                                        chart = new ApexCharts($el.querySelector('.preview-chart'), options);
-                                                        chart.render();
-                                                    }, 200);
-                                                }
-                                            });
-                                            
-                                            $watch('form.categories', (val) => { if(chart) chart.updateOptions({ xaxis: { categories: val } }) });
-                                            $watch('form.series', (val) => { if(chart) chart.updateSeries(JSON.parse(JSON.stringify(val))) }, { deep: true });
+                                             $watch('editing', (val) => {
+                                                 if (val && !this.previewChartInstance) {
+                                                      setTimeout(() => {
+                                                          this.previewChartInstance = renderPreview($el.querySelector('.preview-chart'), form.chart_type, form.series, form.categories);
+                                                      }, 200);
+                                                 }
+                                             });
+                                             $watch('form.chart_type', (val) => {
+                                                 if (this.previewChartInstance) {
+                                                     this.previewChartInstance.destroy();
+                                                     this.previewChartInstance = renderPreview($el.querySelector('.preview-chart'), val, form.series, form.categories);
+                                                 }
+                                             });
+                                             $watch('form.categories', (val) => { if(this.previewChartInstance) this.previewChartInstance.updateOptions({ xaxis: { categories: val } }) });
+                                             $watch('form.series', (val) => { if(this.previewChartInstance) this.previewChartInstance.updateSeries(JSON.parse(JSON.stringify(val))) }, { deep: true });
                                          ">
-                                        <div class="preview-chart w-full h-48"></div>
+                                         <div class="preview-chart w-full h-[300px]"></div>
                                     </div>
                                     <div class="space-y-4">
                                         <template x-for="(cat, index) in form.categories" :key="index">
@@ -1084,6 +1090,60 @@
                 newYear: '',
                 duplicateFromCurrent: true,
                 selectedYear: @js($selectedYear),
+
+                renderChart(el, type, series, categories) {
+                    if (!el) return;
+                    const options = {
+                        series: JSON.parse(JSON.stringify(series || [])),
+                        chart: { 
+                            type: type || 'bar', 
+                            height: 450, 
+                            animations: {enabled: true}, 
+                            toolbar: {show: false}, 
+                            background: 'transparent' 
+                        },
+                        theme: { mode: 'dark' },
+                        stroke: { 
+                            show: true, 
+                            width: (type || 'bar') === 'bar' ? 0 : 3, 
+                            curve: 'smooth' 
+                        },
+                        fill: {
+                            opacity: (type || 'bar') === 'area' ? 0.3 : 1
+                        },
+                        xaxis: { categories: JSON.parse(JSON.stringify(categories || [])), labels: {style: {colors: '#888'}} },
+                        yaxis: { labels: {style: {colors: '#888'}} },
+                        colors: ['#10b981'],
+                        plotOptions: { bar: { borderRadius: 4, distributed: (series || []).length <= 1 } }
+                    };
+                    const chart = new ApexCharts(el, options);
+                    chart.render();
+                    return chart;
+                },
+
+                renderPreview(el, type, series, categories) {
+                    if (!el) return;
+                    const options = {
+                        series: JSON.parse(JSON.stringify(series || [])),
+                        chart: { type: type || 'bar', height: 300, animations: {enabled: false}, toolbar: {show: false}, background: 'transparent' },
+                        theme: { mode: 'dark' },
+                        xaxis: { categories: JSON.parse(JSON.stringify(categories || [])), labels: {style: {colors: '#888'}} },
+                        colors: ['#10b981'],
+                        plotOptions: { bar: { borderRadius: 4 } }
+                    };
+                    const chart = new ApexCharts(el, options);
+                    chart.render();
+                    return chart;
+                },
+
+                safeParse(val, fallback) {
+                    try {
+                        return JSON.parse(val);
+                    } catch (e) {
+                        console.error('JSON Parse Error:', e);
+                        return fallback;
+                    }
+                },
                 
                 async save(id, data) {
                     try {
@@ -1097,6 +1157,7 @@
                         });
                         if (response.ok) {
                             alert('Section updated successfully!');
+                            window.location.reload();
                         }
                     } catch (e) {
                         alert('Error saving data');
