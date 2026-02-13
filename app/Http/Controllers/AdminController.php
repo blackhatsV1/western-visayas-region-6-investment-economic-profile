@@ -91,4 +91,26 @@ class AdminController extends Controller
         $inquiry->delete();
         return response()->json(['success' => true]);
     }
+
+    public function duplicateYear(Request $request)
+    {
+        $validated = $request->validate([
+            'source_year' => 'required|string',
+            'target_year' => 'required|string',
+        ]);
+
+        $sourceContents = ProjectContent::where('year_range', $validated['source_year'])->get();
+        
+        if ($sourceContents->isEmpty()) {
+            return response()->json(['success' => false, 'message' => 'Source year has no content.'], 400);
+        }
+
+        foreach ($sourceContents as $content) {
+            $newContent = $content->replicate();
+            $newContent->year_range = $validated['target_year'];
+            $newContent->save();
+        }
+
+        return response()->json(['success' => true]);
+    }
 }

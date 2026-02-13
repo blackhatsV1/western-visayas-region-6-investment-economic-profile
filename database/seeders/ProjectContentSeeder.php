@@ -13,13 +13,24 @@ class ProjectContentSeeder extends Seeder
 
         $data = [
             [
+                'page_number' => 0,
+                'section_title' => 'Global Settings',
+                'type' => 'metadata',
+                'year_range' => '2024-2025',
+                'content' => [
+                    'site_title' => 'Western Visayas: Investment and Economic Profile',
+                    'browser_tab_title' => 'Western Visayas Region 6 Profile',
+                    'logo_text' => 'DTI Region 6'
+                ]
+            ],
+            [
                 'page_number' => 1,
                 'section_title' => 'Title Page',
                 'type' => 'hero',
                 'year_range' => '2024-2025',
                 'source' => 'Supra Regional Consultations to Improve Logistics Efficiency, Reduce Logistics Costs, and Agri Supply Chain | 08 September 2022 | VIZ Logistics Cluster',
                 'content' => [
-                    'title' => 'WESTERN VISAYAS INDUSTRY PROFILE',
+                    'title' => "Why Invest in\nWestern Visayas?",
                     'subtitle' => 'DEPARTMENT OF TRADE AND INDUSTRY REGION 6',
                     'logo' => 'dti-logo.png',
                     'highlight_stats' => [
@@ -74,6 +85,15 @@ class ProjectContentSeeder extends Seeder
                     'notable_info' => 'Last June 13, 2024, President Bongbong Marcos signed the Republic Act No. 12000 to establish the Negros Island Region (NIR).'
                 ],
                 'source' => 'Philippine Statistics Authority, Census of Population 2024'
+            ],
+            [
+                'page_number' => 3,
+                'section_title' => 'Partner Firms Marquee',
+                'type' => 'marquee',
+                'year_range' => '2024-2025',
+                'content' => [
+                    'items' => ['CONCENTRIX', 'TELEPERFORMANCE', 'TRANSCOM', 'TELETECH', 'LEGATO', 'SM RETAIL', 'ROBINSONS', 'PUEBLO DE PANAY', 'MEGAWORLD', 'AYALA LAND']
+                ]
             ],
             [
                 'page_number' => 4,
@@ -486,6 +506,16 @@ class ProjectContentSeeder extends Seeder
                     ]
                 ],
                 'source' => 'DTI Western Visayas'
+            ],
+            [
+                'page_number' => 50,
+                'section_title' => 'Closing CTA',
+                'type' => 'cta',
+                'year_range' => '2024-2025',
+                'content' => [
+                    'title' => "Ready to Lead in\nWestern Visayas?",
+                    'description' => 'Join over 85,000 thriving businesses. DTI Region 6 is ready to provide the collaborative environment and strategic support your expansion needs.'
+                ]
             ]
         ];
 

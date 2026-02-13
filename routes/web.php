@@ -18,4 +18,5 @@ Route::prefix('admin')->group(function () {
     Route::delete('/content/{content}', [AdminController::class, 'destroy']);
     Route::delete('/year/{year}', [AdminController::class, 'destroyYear']);
     Route::delete('/inquiry/{inquiry}', [AdminController::class, 'destroyInquiry']);
+    Route::post('/year/duplicate', [AdminController::class, 'duplicateYear']);
 });

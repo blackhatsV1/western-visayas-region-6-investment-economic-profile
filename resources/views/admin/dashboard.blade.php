@@ -122,44 +122,106 @@
             @php $hero = $contents->where('type', 'hero')->first(); @endphp
             <div id="section-hero" class="scroll-mt-32">
                 @if($hero)
-                    <div x-data="{ editing: false, form: @js($hero->content), title: @js($hero->section_title), source: @js($hero->source) }" class="grid grid-cols-1 lg:grid-cols-3 gap-6 relative">
-                        <!-- Hero Content Card -->
-                        <div class="lg:col-span-2 bento-card p-12 flex flex-col justify-center bg-gradient-to-br from-arbitra-dark to-arbitra-black group">
-                            <button @click="editing = true" class="absolute top-6 right-6 opacity-0 group-hover:opacity-100 bg-arbitra-emerald text-arbitra-black px-4 py-2 rounded-full font-black text-[10px] transition-all z-20">EDIT HERO</button>
+                    <div x-data="{ 
+                        editing: false, 
+                        techy: false,
+                        editingModal: false,
+                        form: @js($hero->content), 
+                        title: @js($hero->section_title), 
+                        source: @js($hero->source),
+                        modalJson: JSON.stringify(@js($hero->content['modal_details'] ?? null), null, 4),
+                        init() {
+                            this.$watch('form.modal_details', (val) => {
+                                this.modalJson = JSON.stringify(val, null, 4);
+                            });
+                        }
+                    }" class="grid grid-cols-1 lg:grid-cols-3 gap-6 relative">
+                        <!-- Hero Content Preview (Match Public Site) -->
+                        <div @click="editing = true" class="lg:col-span-2 bento-card p-12 flex flex-col justify-center bg-gradient-to-br from-arbitra-dark to-arbitra-black cursor-pointer group hover:border-arbitra-emerald/60 transition-all relative overflow-hidden">
+                            <div class="absolute inset-0 bg-arbitra-emerald/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                             
-                            <h2 class="text-6xl font-black mb-10 leading-[1] tracking-tighter uppercase italic" x-text="title"></h2>
-                            <p class="text-lg text-arbitra-gray max-w-xl" x-text="form.description || 'Welcome to Western Visayas'"></p>
+                            <div class="relative z-10">
+                                <div class="flex items-center gap-3 mb-10">
+                                    <span class="px-5 py-1.5 rounded-full bg-arbitra-emerald/10 text-arbitra-emerald font-black text-[10px] uppercase tracking-[0.2em] border border-arbitra-emerald/20">Investment Motivation</span>
+                                    <div class="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold text-white/50 group-hover:text-white group-hover:bg-arbitra-emerald/20 transition-all flex items-center gap-2">
+                                        <span>CLICK TO EDIT</span>
+                                    </div>
+                                </div>
+                                <h2 class="text-6xl font-black mb-10 leading-[1] tracking-tighter uppercase italic group-hover:text-white transition-colors" x-text="form.title || 'Why Invest in Western Visayas?'"></h2>
+                                <p class="text-lg text-arbitra-gray max-w-xl leading-relaxed font-medium group-hover:text-white/80 transition-colors" x-text="form.description"></p>
+                            </div>
+
+                            <div class="pt-8 mt-auto border-t border-white/5 relative z-10">
+                                <span class="text-[10px] font-bold text-arbitra-gray uppercase tracking-widest block mb-1">Source</span>
+                                <p class="text-xs text-arbitra-emerald font-bold" x-text="source"></p>
+                            </div>
                             
-                            <!-- Admin Edit Overlay -->
-                            <div x-show="editing" x-cloak class="admin-overlay">
-                                <label class="admin-label">Section Title</label>
-                                <input type="text" x-model="title" class="admin-input">
-                                
-                                <label class="admin-label">Description</label>
-                                <textarea x-model="form.description" class="admin-input h-32"></textarea>
+                            <!-- Admin Edit Overlay (Inside Hero) -->
+                            <div x-show="editing" x-cloak class="admin-overlay overflow-y-auto">
+                                <div class="flex justify-between items-center mb-6">
+                                    <h3 class="text-xl font-black uppercase italic text-arbitra-emerald">Editing Hero</h3>
+                                    <button @click.stop="techy = !techy" class="text-[10px] font-black uppercase text-white/40 hover:text-white border border-white/10 px-3 py-1 rounded" x-text="techy ? 'Switch to Easy Mode' : 'Switch to Techy Mode'"></button>
+                                </div>
+                                <div x-show="techy">
+                                    <label class="admin-label">Raw JSON Data</label>
+                                    <textarea @click.stop x-model="JSON.stringify(form, null, 2)" @change="try { form = JSON.parse($event.target.value) } catch(e) { alert('Invalid JSON') }" class="admin-input h-64 font-mono text-[10px]"></textarea>
+                                </div>
+
+                                <div x-show="!techy" class="space-y-4">
+                                    <label class="admin-label">Section Title (Internal)</label>
+                                    <input @click.stop type="text" x-model="title" class="admin-input">
+
+                                    <label class="admin-label">Hero Title (Public)</label>
+                                    <input @click.stop type="text" x-model="form.title" class="admin-input">
+                                    
+                                    <label class="admin-label">Description</label>
+                                    <textarea @click.stop x-model="form.description" class="admin-input h-32"></textarea>
+                                </div>
                                 
                                 <label class="admin-label">Source</label>
-                                <input type="text" x-model="source" class="admin-input">
+                                <input @click.stop type="text" x-model="source" class="admin-input">
+
+                                {{-- Popup Editor for Hero --}}
+                                <div class="mt-8 pt-8 border-t border-white/10">
+                                    <div class="flex items-center justify-between mb-6">
+                                        <h4 class="text-xs font-black uppercase tracking-widest text-arbitra-emerald">Hero Popup (Investment Motivation)</h4>
+                                        <button @click.stop="if(!form.modal_details) form.modal_details = {}; editingModal = true" x-show="!editingModal" class="text-[10px] font-black uppercase bg-white/5 px-4 py-1.5 rounded-full border border-white/10 hover:bg-arbitra-emerald hover:text-arbitra-black transition-all">Edit Pop-up</button>
+                                    </div>
+
+                                    <div x-show="editingModal" class="space-y-6 bg-black/20 p-6 rounded-2xl border border-white/5">
+                                        <div class="flex justify-between items-center bg-white/5 -m-6 mb-6 p-4 rounded-t-2xl">
+                                            <span class="text-[10px] font-bold text-arbitra-gray uppercase">JSON Content</span>
+                                            <button @click.stop="editingModal = false" class="text-[10px] font-black text-arbitra-emerald">HIDE</button>
+                                        </div>
+                                        <textarea @click.stop x-model="modalJson" 
+                                                  @input="try { form.modal_details = JSON.parse($event.target.value) } catch(e) {}"
+                                                  class="admin-input h-64 font-mono text-xs"></textarea>
+                                    </div>
+                                </div>
                                 
-                                <div class="flex gap-4 mt-auto">
-                                    <button @click="save({{ $hero->id }}, {section_title: title, content: form, source: source}); editing = false" class="bg-arbitra-emerald text-arbitra-black px-6 py-2 rounded-full font-black text-xs">SAVE CHANGES</button>
-                                    <button @click="editing = false" class="text-white px-6 py-2 rounded-full font-black text-xs border border-white/20">CANCEL</button>
+                                <div class="flex gap-4 mt-auto pt-6">
+                                    <button @click.stop="save({{ $hero->id }}, {section_title: title, content: form, source: source}); editing = false" class="bg-arbitra-emerald text-arbitra-black px-6 py-2 rounded-full font-black text-xs">SAVE CHANGES</button>
+                                    <button @click.stop="editing = false" class="text-white px-6 py-2 rounded-full font-black text-xs border border-white/20">CANCEL</button>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Highlight Stats -->
                         <div class="flex flex-col gap-6">
-                            <template x-for="(stat, index) in form.highlight_stats">
-                                <div class="bento-card flex-1 p-10 flex flex-col justify-between group relative">
-                                    <button @click="editing = true" class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 bg-arbitra-emerald text-arbitra-black px-3 py-1 rounded-full font-black text-[10px] z-20">EDIT</button>
+                            <template x-for="(stat, index) in form.highlight_stats" :key="index">
+                                <div @click="editing = true" class="bento-card flex-1 p-10 flex flex-col justify-between group relative cursor-pointer hover:border-arbitra-emerald/60">
                                     <span class="text-sm font-bold text-arbitra-gray uppercase tracking-widest" x-text="stat.label"></span>
-                                    <h3 class="text-5xl font-black emerald-text tracking-tighter mt-4" x-text="stat.value"></h3>
+                                    <div class="mt-4">
+                                        <h3 class="text-5xl font-black emerald-text tracking-tighter" x-text="stat.value"></h3>
+                                        <span class="text-[10px] font-black text-arbitra-gray uppercase tracking-widest mt-2 block opacity-40" x-text="stat.label"></span>
+                                    </div>
                                     
                                     <div x-show="editing" x-cloak class="admin-overlay">
-                                        <input type="text" x-model="stat.label" class="admin-input">
-                                        <input type="text" x-model="stat.value" class="admin-input">
-                                        <button @click="editing = false" class="bg-arbitra-emerald text-arbitra-black p-2 rounded mt-2">DONE</button>
+                                        <label class="admin-label">Label</label>
+                                        <input @click.stop type="text" x-model="stat.label" class="admin-input">
+                                        <label class="admin-label mt-4">Value</label>
+                                        <input @click.stop type="text" x-model="stat.value" class="admin-input">
+                                        <button @click.stop="editing = false" class="bg-arbitra-emerald text-arbitra-black p-2 rounded mt-4 font-black text-[10px] uppercase">DONE</button>
                                     </div>
                                 </div>
                             </template>
@@ -177,60 +239,114 @@
             @foreach($contents->whereNotIn('type', ['hero'])->sortBy('page_number') as $content)
                 <section x-data="{ 
                     editing: false, 
+                    techy: false,
+                    editingModal: false,
                     form: @js($content->content), 
                     title: @js($content->section_title), 
                     source: @js($content->source),
-                    techy: false
-                }" class="bento-card p-12 group">
-                    <div class="flex justify-between items-start mb-10">
-                        <div class="flex items-center gap-6">
-                            <h2 class="text-3xl font-black uppercase tracking-tight" x-text="title"></h2>
-                            <button @click="deleteSection({{ $content->id }})" class="opacity-0 group-hover:opacity-100 text-arbitra-gray hover:text-red-500 transition-all">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                            </button>
-                        </div>
-                        <button @click="editing = true" class="opacity-0 group-hover:opacity-100 bg-arbitra-emerald text-arbitra-black px-6 py-2 rounded-full font-black text-xs transition-all">EDIT SECTION</button>
-                    </div>
-
+                    modalJson: JSON.stringify(@js($content->content['modal_details'] ?? null), null, 4),
+                    init() {
+                        this.$watch('form.modal_details', (val) => {
+                            this.modalJson = JSON.stringify(val, null, 4);
+                        });
+                    }
+                }" 
+                class="scroll-mt-32 pb-20 group relative">
+                    
                     @if($content->type === 'stats_grid')
-                        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                            <template x-for="(stat, index) in form.stats">
-                                <div class="bg-white/5 p-6 rounded-2xl border border-white/10 relative group/item">
-                                    <span class="text-[10px] font-bold text-arbitra-gray uppercase block" x-text="stat.label"></span>
-                                    <h3 class="text-2xl font-black mt-2" x-text="stat.value"></h3>
+                        <div @click="editing = true" class="cursor-pointer">
+                            <div class="flex items-center gap-4 mb-8">
+                                <span class="bg-arbitra-emerald/10 text-arbitra-emerald px-3 py-1 rounded font-black text-[10px] uppercase">STATS GRID</span>
+                                <h2 class="text-2xl font-black uppercase tracking-tight" x-text="title"></h2>
+                                <button @click.stop="deleteSection({{ $content->id }})" class="opacity-0 group-hover:opacity-100 text-arbitra-gray hover:text-red-500 transition-all">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                </button>
+                                <span class="text-[10px] font-bold text-arbitra-emerald/50 uppercase ml-auto">Click to edit</span>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                                <template x-for="(stat, index) in form.stats">
+                                    <div class="bg-white/5 p-6 rounded-2xl border border-white/10 relative group/item hover:border-arbitra-emerald/40 transition-all">
+                                        <span class="text-[10px] font-bold text-arbitra-gray uppercase block" x-text="stat.label"></span>
+                                        <h3 class="text-2xl font-black mt-2" x-text="stat.value"></h3>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    @elseif($content->type === 'metadata')
+                        <div @click="editing = true" class="cursor-pointer bg-arbitra-emerald/5 p-8 rounded-2xl border border-arbitra-emerald/10 hover:border-arbitra-emerald transition-all">
+                            <div class="flex items-center gap-6">
+                                <div class="w-16 h-16 rounded-2xl bg-arbitra-emerald/20 flex items-center justify-center border border-arbitra-emerald/20">
+                                    <svg class="w-8 h-8 text-arbitra-emerald" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                                 </div>
-                            </template>
+                                <div>
+                                    <h4 class="text-xl font-extrabold text-white" x-text="form.site_title"></h4>
+                                    <p class="text-sm text-arbitra-gray mt-1 uppercase font-black tracking-widest text-[10px]">Site Configuration / CLICK TO EDIT</p>
+                                </div>
+                            </div>
                         </div>
                     @elseif($content->type === 'grid')
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <template x-for="(item, index) in form.items">
-                                <div class="bg-white/5 p-6 rounded-2xl border border-white/10 relative group/item">
-                                    <h4 class="font-black uppercase mb-2" x-text="item.name"></h4>
-                                    <p class="text-xs text-arbitra-gray line-clamp-3" x-text="item.details"></p>
-                                </div>
-                            </template>
+                        <div @click="editing = true" class="cursor-pointer">
+                            <div class="flex items-center gap-4 mb-8">
+                                <span class="bg-arbitra-emerald/10 text-arbitra-emerald px-3 py-1 rounded font-black text-[10px] uppercase">INFO GRID</span>
+                                <h2 class="text-2xl font-black uppercase tracking-tight" x-text="title"></h2>
+                                <button @click.stop="deleteSection({{ $content->id }})" class="opacity-0 group-hover:opacity-100 text-arbitra-gray hover:text-red-500 transition-all">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                </button>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <template x-for="(item, index) in form.items">
+                                    <div class="bg-white/5 p-6 rounded-2xl border border-white/10 relative group/item hover:border-arbitra-emerald/40">
+                                        <h4 class="font-black uppercase mb-2" x-text="item.name"></h4>
+                                        <p class="text-xs text-arbitra-gray line-clamp-3" x-text="item.details"></p>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    @elseif($content->type === 'marquee')
+                        <div @click="editing = true" class="cursor-pointer relative overflow-hidden whitespace-nowrap py-10 border-y border-white/5 hover:bg-white/5 transition-all">
+                            <div class="absolute top-2 left-4 px-3 py-1 rounded-full bg-arbitra-emerald/10 text-arbitra-emerald font-black text-[8px] uppercase tracking-widest">PARTNERS MARQUEE / CLICK TO EDIT</div>
+                            <div class="flex gap-8 animate-marquee whitespace-nowrap opacity-50">
+                                <template x-for="item in form.items">
+                                    <span class="text-xl font-black uppercase tracking-widest text-white" x-text="item"></span>
+                                </template>
+                            </div>
+                        </div>
+                    @elseif($content->type === 'cta')
+                        <div @click="editing = true" class="cursor-pointer bento-card p-12 text-center bg-gradient-to-br from-arbitra-emerald/10 to-transparent border-arbitra-emerald/20 hover:border-arbitra-emerald/60 transition-all">
+                            <h3 class="text-4xl font-black uppercase italic mb-6" x-text="form.title"></h3>
+                            <p class="text-lg text-arbitra-gray max-w-xl mx-auto mb-8" x-text="form.description"></p>
+                            <div class="inline-block bg-arbitra-emerald text-arbitra-black px-8 py-3 rounded-full font-black text-xs uppercase tracking-widest">Connect Feedback Form</div>
                         </div>
                     @elseif($content->type === 'chart')
-                        <div class="bg-white/5 p-8 rounded-2xl border border-white/10" 
-                             x-init="
-                                const options = {
-                                    series: @json($content->content['series'] ?? []),
-                                    chart: { type: '{{ $content->content['chart_type'] ?? 'bar' }}', height: 250, toolbar: {show: false}, background: 'transparent' },
-                                    theme: { mode: 'dark' },
-                                    xaxis: { categories: @json($content->content['categories'] ?? []), labels: {style: {colors: '#888'}} },
-                                    yaxis: { labels: {style: {colors: '#888'}} },
-                                    colors: ['#10b981'],
-                                    plotOptions: { bar: { borderRadius: 4, distributed: {{ count($content->content['series'] ?? []) <= 1 ? 'true' : 'false' }} } }
-                                };
-                                const chart = new ApexCharts($el.querySelector('.main-chart'), options);
-                                chart.render();
-                             ">
-                            <div class="main-chart w-full h-64"></div>
+                        <div @click="editing = true" class="cursor-pointer">
+                            <div class="flex items-center gap-4 mb-8">
+                                <span class="bg-arbitra-emerald/10 text-arbitra-emerald px-3 py-1 rounded font-black text-[10px] uppercase">DYNAMIC CHART</span>
+                                <h2 class="text-2xl font-black uppercase tracking-tight" x-text="title"></h2>
+                                <button @click.stop="deleteSection({{ $content->id }})" class="opacity-0 group-hover:opacity-100 text-arbitra-gray hover:text-red-500 transition-all">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                </button>
+                            </div>
+                            <div class="bg-white/5 p-8 rounded-2xl border border-white/10 hover:border-arbitra-emerald/40" 
+                                 x-init="
+                                    const options = {
+                                        series: @json($content->content['series'] ?? []),
+                                        chart: { type: '{{ $content->content['chart_type'] ?? 'bar' }}', height: 250, toolbar: {show: false}, background: 'transparent' },
+                                        theme: { mode: 'dark' },
+                                        xaxis: { categories: @json($content->content['categories'] ?? []), labels: {style: {colors: '#888'}} },
+                                        yaxis: { labels: {style: {colors: '#888'}} },
+                                        colors: ['#10b981'],
+                                        plotOptions: { bar: { borderRadius: 4, distributed: {{ count($content->content['series'] ?? []) <= 1 ? 'true' : 'false' }} } }
+                                    };
+                                    const chart = new ApexCharts($el.querySelector('.main-chart'), options);
+                                    chart.render();
+                                 ">
+                                <div class="main-chart w-full h-64"></div>
+                            </div>
                         </div>
                     @endif
 
                     <!-- Edit Overlay -->
-                    <div x-show="editing" x-cloak class="admin-overlay overflow-y-auto">
+                    <div x-show="editing" x-cloak class="admin-overlay overflow-y-auto" @click.stop>
                         <div class="flex justify-between items-center mb-6">
                             <h3 class="text-xl font-black uppercase italic text-arbitra-emerald">Editing Section</h3>
                             <button @click="techy = !techy" class="text-[10px] font-black uppercase text-white/40 hover:text-white border border-white/10 px-3 py-1 rounded" x-text="techy ? 'Switch to Easy Mode' : 'Switch to Techy Mode'"></button>
@@ -315,27 +431,97 @@
                                                     <label class="admin-label">Label</label>
                                                     <input type="text" x-model="form.categories[index]" class="admin-input">
                                                 </div>
-                                                <div class="flex-1">
-                                                    <label class="admin-label">Value</label>
-                                                    <input type="number" step="0.1" x-model.number="form.series[0].data[index]" class="admin-input">
+                                                <div class="flex-1 space-y-4">
+                                                    <template x-for="(s, sIndex) in form.series" :key="sIndex">
+                                                        <div>
+                                                            <label class="admin-label text-[8px]" x-text="s.name"></label>
+                                                            <input type="number" step="0.1" x-model.number="s.data[index]" class="admin-input">
+                                                        </div>
+                                                    </template>
                                                 </div>
-                                                <button @click="form.categories.splice(index, 1); form.series[0].data.splice(index, 1)" class="p-2 text-red-500 hover:bg-red-500/10 rounded mt-4">
+                                                <button @click="form.categories.splice(index, 1); form.series.forEach(s => s.data.splice(index, 1))" class="p-2 text-red-500 hover:bg-red-500/10 rounded">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                                 </button>
                                             </div>
                                         </template>
-                                        <button @click="form.categories.push('New Label'); form.series[0].data.push(0)" class="w-full py-2 border-2 border-dashed border-white/10 rounded-xl text-arbitra-gray hover:border-arbitra-emerald hover:text-white transition-all font-bold text-xs uppercase">+ Add Data Point</button>
+                                        <button @click="form.categories.push('New Label'); form.series.forEach(s => s.data.push(0))" class="w-full py-2 border-2 border-dashed border-white/10 rounded-xl text-arbitra-gray hover:border-arbitra-emerald hover:text-white transition-all font-bold text-xs uppercase">+ Add Data Point</button>
+                                    </div>
+                                    
+                                    <div class="mt-6 pt-6 border-t border-white/5">
+                                        <label class="admin-label">Data Series Names</label>
+                                        <div class="grid grid-cols-2 gap-4 mt-2">
+                                            <template x-for="(s, sIndex) in form.series" :key="sIndex">
+                                                <div class="flex gap-2 items-center bg-white/5 p-2 rounded">
+                                                    <input type="text" x-model="s.name" class="admin-input text-[10px] py-1">
+                                                    <button @click="form.series.splice(sIndex, 1)" class="text-red-500 p-1">×</button>
+                                                </div>
+                                            </template>
+                                            <button @click="form.series.push({name: 'New Series', data: new Array(form.categories.length).fill(0)})" class="text-[10px] font-bold text-arbitra-emerald uppercase">+ Add Series</button>
+                                        </div>
                                     </div>
                                 </div>
+                            @elseif($content->type === 'marquee')
+                                <div class="space-y-4">
+                                    <label class="admin-label">Partners / Logos (Marquee)</label>
+                                    <template x-for="(item, index) in form.items" :key="index">
+                                        <div class="flex gap-4 items-center bg-white/5 p-4 rounded-xl">
+                                            <input type="text" x-model="form.items[index]" class="admin-input">
+                                            <button @click="form.items.splice(index, 1)" class="p-2 text-red-500 hover:bg-red-500/10 rounded">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                            </button>
+                                        </div>
+                                    </template>
+                                    <button @click="form.items.push('NEW PARTNER')" class="w-full py-2 border-2 border-dashed border-white/10 rounded-xl text-arbitra-gray hover:border-arbitra-emerald hover:text-white transition-all font-bold text-xs uppercase">+ Add Partner</button>
+                                </div>
+                            @elseif($content->type === 'cta')
+                                <div class="space-y-4">
+                                    <label class="admin-label">CTA Title</label>
+                                    <input type="text" x-model="form.title" class="admin-input">
+                                    <label class="admin-label">CTA Description</label>
+                                    <textarea x-model="form.description" class="admin-input h-32"></textarea>
+                                </div>
+                            @elseif($content->type === 'metadata')
+                                <div class="space-y-4">
+                                    <label class="admin-label">Browser Tab Title</label>
+                                    <input type="text" x-model="form.browser_tab_title" class="admin-input">
+                                    
+                                    <label class="admin-label">Navbar Title</label>
+                                    <input type="text" x-model="form.site_title" class="admin-input">
+                                    
+                                    <label class="admin-label">Logo Subtitle (e.g. DTI Region 6)</label>
+                                    <input type="text" x-model="form.logo_text" class="admin-input">
+                                </div>
                             @endif
+
+                            {{-- Dynamic Popup (Modal) Editor --}}
+                            <div class="mt-8 pt-8 border-t border-white/10">
+                                <div class="flex items-center justify-between mb-6">
+                                    <h4 class="text-xs font-black uppercase tracking-widest text-arbitra-emerald">Popup Details (Interactive Modal)</h4>
+                                    <button @click="if(!form.modal_details) form.modal_details = {}; editingModal = true" x-show="!editingModal" class="text-[10px] font-black uppercase bg-white/5 px-4 py-1.5 rounded-full border border-white/10 hover:bg-arbitra-emerald hover:text-arbitra-black transition-all">Enable/Edit Pop-up</button>
+                                </div>
+
+                                <div x-show="editingModal" class="space-y-6 bg-black/20 p-6 rounded-2xl border border-white/5">
+                                    <div class="flex justify-between items-center bg-white/5 -m-6 mb-6 p-4 rounded-t-2xl">
+                                        <span class="text-[10px] font-bold text-arbitra-gray uppercase">JSON Data Structure</span>
+                                        <button @click="editingModal = false" class="text-[10px] font-black text-arbitra-emerald">HIDE EDITOR</button>
+                                    </div>
+                                    <textarea x-model="modalJson" 
+                                              @input="try { form.modal_details = JSON.parse($event.target.value) } catch(e) {}"
+                                              class="admin-input h-64 font-mono text-xs" 
+                                              placeholder='{"Why Invest?": {"Points": ["Point 1", "Point 2"]}}'></textarea>
+                                    <p class="text-[10px] text-arbitra-gray/50 italic">Note: Advanced users only. Editing raw JSON allows full control over maps, lists, and grids in the popups.</p>
+                                </div>
+                            </div>
                         </div>
                         
                         <label class="admin-label mt-4">Source</label>
-                        <input type="text" x-model="source" class="admin-input">
+                        <input @click.stop type="text" x-model="source" class="admin-input">
 
-                        <div class="flex gap-4 mt-8">
-                            <button @click="save({{ $content->id }}, {section_title: title, content: form, source: source}); editing = false" class="bg-arbitra-emerald text-arbitra-black px-6 py-2 rounded-full font-black text-xs">SAVE SECTION</button>
-                            <button @click="editing = false" class="text-white px-6 py-2 rounded-full font-black text-xs border border-white/20">CANCEL</button>
+                        <div class="flex gap-4 mt-8 pt-6 border-t border-white/5">
+                            <button @click.stop="save({{ $content->id }}, {section_title: title, content: form, source: source}); editing = false" class="bg-arbitra-emerald text-arbitra-black px-6 py-2 rounded-full font-black text-xs">SAVE SECTION</button>
+                            <div class="flex-1"></div>
+                            <button @click.stop="deleteSection({{ $content->id }})" class="text-red-500 px-6 py-2 rounded-full font-black text-xs border border-red-500/20 hover:bg-red-500/10">DELETE SECTION</button>
+                            <button @click.stop="editing = false" class="text-white px-6 py-2 rounded-full font-black text-xs border border-white/20">CANCEL</button>
                         </div>
                     </div>
                 </section>
@@ -354,6 +540,10 @@
                 <button @click="addSection('chart')" class="bento-card p-10 border-dashed border-white/10 flex flex-col items-center justify-center opacity-40 hover:opacity-100 transition-all">
                     <span class="text-3xl mb-2">+</span>
                     <span class="font-black text-[10px] uppercase">Add Chart</span>
+                </button>
+                <button @click="addSection('metadata')" class="bento-card p-10 border-dashed border-white/10 flex flex-col items-center justify-center opacity-40 hover:opacity-100 transition-all">
+                    <span class="text-3xl mb-2">+</span>
+                    <span class="font-black text-[10px] uppercase">Site Settings</span>
                 </button>
             </div>
 
@@ -404,12 +594,18 @@
         </section>
     </main>
 
-    <!-- Add Year Modal -->
     <div x-show="showAddYear" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-xl px-6">
         <div class="bg-arbitra-dark p-12 rounded-[2.5rem] border border-white/10 max-w-md w-full">
             <h3 class="text-2xl font-black mb-6 italic uppercase tracking-tighter">Add New Year Profile</h3>
+            
             <label class="admin-label">Year Range (e.g., 2030-2031)</label>
-            <input type="text" x-model="newYear" class="admin-input mt-2 mb-8">
+            <input type="text" x-model="newYear" class="admin-input mt-2 mb-6">
+            
+            <div class="flex items-center gap-3 mb-8 bg-white/5 p-4 rounded-2xl border border-white/5">
+                <input type="checkbox" x-model="duplicateFromCurrent" id="dupCheck" class="w-4 h-4 accent-arbitra-emerald">
+                <label for="dupCheck" class="text-xs font-bold text-white cursor-pointer uppercase tracking-wider">Duplicate from {{ $selectedYear }}</label>
+            </div>
+
             <div class="flex gap-4">
                 <button @click="createYear()" class="flex-1 bg-arbitra-emerald text-arbitra-black py-3 rounded-full font-black text-xs">CREATE PROFILE</button>
                 <button @click="showAddYear = false" class="flex-1 border border-white/20 py-3 rounded-full font-black text-xs">CANCEL</button>
@@ -422,6 +618,7 @@
             return {
                 showAddYear: false,
                 newYear: '',
+                duplicateFromCurrent: true,
                 selectedYear: @js($selectedYear),
                 
                 async save(id, data) {
@@ -480,8 +677,33 @@
 
                 async createYear() {
                     if (!this.newYear) return;
-                    // To simplify, we just redirect and let the "empty skeleton" logic handle the first section creation
-                    window.location.href = `?year=${this.newYear}`;
+                    
+                    if (this.duplicateFromCurrent) {
+                        try {
+                            const response = await fetch('/admin/year/duplicate', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                },
+                                body: JSON.stringify({
+                                    source_year: this.selectedYear,
+                                    target_year: this.newYear
+                                })
+                            });
+                            if (response.ok) {
+                                window.location.href = `?year=${this.newYear}`;
+                            } else {
+                                const data = await response.json();
+                                alert(data.message || 'Error duplicating year');
+                            }
+                        } catch (e) {
+                            alert('Error duplicating year');
+                        }
+                    } else {
+                        // To simplify, we just redirect and let the "empty skeleton" logic handle the first section creation
+                        window.location.href = `?year=${this.newYear}`;
+                    }
                 },
 
                 async addSection(type) {
@@ -496,7 +718,10 @@
                         hero: { description: 'Edit this description', highlight_stats: [{label: 'Stat 1', value: '100%'}] },
                         stats_grid: { stats: [{label: 'Stat 1', value: 'Value 1'}] },
                         grid: { items: [{name: 'Feature Name', details: 'Detailed description goes here'}] },
-                        chart: { chart_type: 'bar', series: [{name: 'Data', data: [10, 20, 30]}], labels: ['A', 'B', 'C'] }
+                        chart: { chart_type: 'bar', series: [{name: 'Data', data: [10, 20, 30]}], categories: ['A', 'B', 'C'] },
+                        marquee: { items: ['FIRM 1', 'FIRM 2', 'FIRM 3'] },
+                        cta: { title: 'Ready to Lead?', description: 'Join over 85,000 thriving businesses.' },
+                        metadata: { site_title: 'Western Visayas: Investment Profile', browser_tab_title: 'WV Region 6 Profile', logo_text: 'DTI Region 6' }
                     };
 
                     try {

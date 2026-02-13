@@ -3,7 +3,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Western Visayas: Investment and Economic Profile</title>
+    @php $meta = $contents->where('type', 'metadata')->first(); @endphp
+    <title>{{ $meta->content['browser_tab_title'] ?? 'Western Visayas: Investment and Economic Profile' }}</title>
     <link rel="icon" type="image/png" href="{{ asset('dti-logo.png') }}">
     
     <!-- Scripts & Styles -->
@@ -254,7 +255,7 @@
             <div class="flex items-center gap-4">
                 <img src="{{ asset('dti-logo.png') }}" class="h-8 w-auto" alt="DTI Logo">
                 <div class="h-6 w-px bg-white/10 hidden md:block"></div>
-                <h1 class="text-sm font-black tracking-tight uppercase hidden md:block">Western Visayas: Investment and Economic Profile</h1>
+                <h1 class="text-sm font-black tracking-tight uppercase hidden md:block">{{ $meta->content['site_title'] ?? 'Western Visayas: Investment and Economic Profile' }}</h1>
             </div>
             
             <div class="flex items-center gap-6 bg-white/5 px-6 py-2 rounded-full border border-white/5">
@@ -324,7 +325,7 @@
                                 @endif
                             </div>
                             <h2 class="text-6xl md:text-7xl font-black mb-10 leading-[1] tracking-tighter uppercase italic group-hover:text-white transition-colors">
-                                Why Invest in<br>Western Visayas?
+                                {!! nl2br(e($hero->content['title'] ?? 'Why Invest in Western Visayas?')) !!}
                             </h2>
                             <p class="text-lg text-arbitra-gray max-w-xl leading-relaxed font-medium group-hover:text-white/80 transition-colors">
                                 A strategic gateway in the heart of the Philippines, offering a collaborative environment, abundant natural resources, and a rapidly industrializing economy ready for global expansion.
@@ -352,30 +353,25 @@
             @endif
 
             <!-- STAGE 2: AUTHORITY (TRUST BAR) -->
+            @php $marquee = $contents->where('type', 'marquee')->first(); @endphp
+            @if($marquee)
             <div x-data="{ hovered: false }" 
                  @mouseenter="hovered = true" 
                  @mouseleave="hovered = false"
                  class="relative overflow-hidden whitespace-nowrap py-10 border-y border-white/5 transition duration-500">
                 
-                <!-- Single Banner Tooltip -->
                 <div x-show="hovered"
-                     x-transition:enter="transition ease-out duration-200"
-                     x-transition:enter-start="opacity-0 translate-y-4"
-                     x-transition:enter-end="opacity-100 translate-y-0"
-                     x-transition:leave="transition ease-in duration-150"
-                     x-transition:leave-start="opacity-100 translate-y-0"
-                     x-transition:leave-end="opacity-0 translate-y-4"
-                     class="absolute top-2 left-1/2 -translate-x-1/2 px-5 py-2 rounded-full bg-arbitra-emerald text-arbitra-black font-black text-[10px] tracking-[0.2em] whitespace-nowrap pointer-events-none z-50 shadow-[0_0_30px_rgba(16,185,129,0.4)]"
-                     x-cloak>
+                     x-cloak
+                     class="absolute top-2 left-1/2 -translate-x-1/2 px-5 py-2 rounded-full bg-arbitra-emerald text-arbitra-black font-black text-[10px] tracking-[0.2em] whitespace-nowrap pointer-events-none z-50 shadow-[0_0_30px_rgba(16,185,129,0.4)]">
                     PARTNERS OF WESTERN VISAYAS
                 </div>
 
                 <div class="inline-block animate-marquee transition-all duration-500"
                      :class="hovered ? 'scale-[1.1] text-arbitra-emerald' : ''">
                     @php
-                        $firms = ['CONCENTRIX', 'TELEPERFORMANCE', 'TRANSCOM', 'TELETECH', 'LEGATO', 'SM RETAIL', 'ROBINSONS', 'PUEBLO DE PANAY', 'MEGAWORLD', 'AYALA LAND'];
+                        $firms = $marquee->content['items'] ?? [];
                     @endphp
-                    @foreach(array_merge($firms, $firms) as $firm)
+                    @foreach(array_merge($firms, $firms, $firms) as $firm)
                         <span class="text-2xl font-black mx-12 tracking-widest cursor-default inline-block text-white transition-colors duration-500"
                               :class="hovered ? 'text-arbitra-emerald' : 'text-white'">
                             {{ $firm }}
@@ -383,6 +379,7 @@
                     @endforeach
                 </div>
             </div>
+            @endif
             <style>
                 @keyframes marquee {
                     0% { transform: translateX(0); }
@@ -730,24 +727,27 @@
             @endforeach
 
             <!-- STAGE 5: ACTION (CLOSING CTA) -->
+            @php $cta = $contents->where('type', 'cta')->first(); @endphp
+            @if($cta)
             <section id="action" class="py-20">
                 <div class="bento-card p-20 text-center bg-gradient-to-br from-arbitra-emerald/10 to-transparent border-arbitra-emerald/20">
                     <h2 class="text-5xl md:text-6xl font-black mb-8 tracking-tighter uppercase italic">
-                        Ready to Lead in<br>Western Visayas?
+                        {!! nl2br(e($cta->content['title'])) !!}
                     </h2>
                     <p class="text-xl text-arbitra-gray max-w-2xl mx-auto mb-12 font-medium">
-                        Join over 85,000 thriving businesses. DTI Region 6 is ready to provide the collaborative environment and strategic support your expansion needs.
+                        {{ $cta->content['description'] }}
                     </p>
                     <div class="flex flex-col md:flex-row items-center justify-center gap-6">
                         <button @click="contactOpen = true; contactSuccess = false" class="bg-arbitra-emerald text-arbitra-black px-12 py-5 rounded-full font-black text-lg uppercase tracking-widest hover:scale-105 transition shadow-[0_0_50px_rgba(16,185,129,0.3)]">
                             Contact DTI Region 6
                         </button>
-                        <a href="/download-profile/2024-2025" class="bg-white/5 text-white border border-white/10 px-12 py-5 rounded-full font-black text-lg uppercase tracking-widest hover:bg-white/10 transition inline-block">
+                        <a href="/download-profile/{{ $selectedYear }}" class="bg-white/5 text-white border border-white/10 px-12 py-5 rounded-full font-black text-lg uppercase tracking-widest hover:bg-white/10 transition inline-block">
                             Download Profile PDF
                         </a>
                     </div>
                 </div>
             </section>
+            @endif
 
         </div>
         @endif
