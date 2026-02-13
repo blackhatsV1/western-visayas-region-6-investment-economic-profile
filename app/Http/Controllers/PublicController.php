@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 
 use App\Models\ProjectContent;
 use App\Models\Inquiry;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class PublicController extends Controller
 {
@@ -47,5 +48,20 @@ class PublicController extends Controller
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Failed to save inquiry.'], 500);
         }
+    }
+
+    public function downloadPdf($year)
+    {
+        $contents = ProjectContent::where('year_range', $year)->get();
+        if ($contents->isEmpty()) {
+            abort(404, "No profile data found for this year.");
+        }
+
+        $pdf = Pdf::loadView('pdf.profile', [
+            'contents' => $contents,
+            'year' => $year
+        ]);
+
+        return $pdf->download("Western_Visayas_Investment_Profile_{$year}.pdf");
     }
 }

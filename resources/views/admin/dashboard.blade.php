@@ -210,6 +210,23 @@
                                 </div>
                             </template>
                         </div>
+                    @elseif($content->type === 'chart')
+                        <div class="bg-white/5 p-8 rounded-2xl border border-white/10" 
+                             x-init="
+                                const options = {
+                                    series: @json($content->content['series'] ?? []),
+                                    chart: { type: '{{ $content->content['chart_type'] ?? 'bar' }}', height: 250, toolbar: {show: false}, background: 'transparent' },
+                                    theme: { mode: 'dark' },
+                                    xaxis: { categories: @json($content->content['categories'] ?? []), labels: {style: {colors: '#888'}} },
+                                    yaxis: { labels: {style: {colors: '#888'}} },
+                                    colors: ['#10b981'],
+                                    plotOptions: { bar: { borderRadius: 4, distributed: {{ count($content->content['series'] ?? []) <= 1 ? 'true' : 'false' }} } }
+                                };
+                                const chart = new ApexCharts($el.querySelector('.main-chart'), options);
+                                chart.render();
+                             ">
+                            <div class="main-chart w-full h-64"></div>
+                        </div>
                     @endif
 
                     <!-- Edit Overlay -->
@@ -263,6 +280,52 @@
                                         </div>
                                     </template>
                                     <button @click="form.items.push({name: 'New Item', details: 'Description...'})" class="w-full py-2 border-2 border-dashed border-white/10 rounded-xl text-arbitra-gray hover:border-arbitra-emerald hover:text-white transition-all font-bold text-xs uppercase">+ Add New Item</button>
+                                </div>
+                            @elseif($content->type === 'chart')
+                                <div class="space-y-6">
+                                    <div class="bg-black/40 p-6 rounded-2xl border border-white/5"
+                                         x-init="
+                                            let chart = null;
+                                            $watch('editing', (val) => {
+                                                if (val && !chart) {
+                                                    setTimeout(() => {
+                                                        const options = {
+                                                            series: JSON.parse(JSON.stringify(form.series)),
+                                                            chart: { type: 'bar', height: 200, animations: {enabled: false}, toolbar: {show: false}, background: 'transparent' },
+                                                            theme: { mode: 'dark' },
+                                                            xaxis: { categories: JSON.parse(JSON.stringify(form.categories)), labels: {style: {colors: '#888'}} },
+                                                            colors: ['#10b981'],
+                                                            plotOptions: { bar: { borderRadius: 4 } }
+                                                        };
+                                                        chart = new ApexCharts($el.querySelector('.preview-chart'), options);
+                                                        chart.render();
+                                                    }, 200);
+                                                }
+                                            });
+                                            
+                                            $watch('form.categories', (val) => { if(chart) chart.updateOptions({ xaxis: { categories: val } }) });
+                                            $watch('form.series', (val) => { if(chart) chart.updateSeries(JSON.parse(JSON.stringify(val))) }, { deep: true });
+                                         ">
+                                        <div class="preview-chart w-full h-48"></div>
+                                    </div>
+                                    <div class="space-y-4">
+                                        <template x-for="(cat, index) in form.categories" :key="index">
+                                            <div class="flex gap-4 items-center bg-white/5 p-4 rounded-xl">
+                                                <div class="flex-[2]">
+                                                    <label class="admin-label">Label</label>
+                                                    <input type="text" x-model="form.categories[index]" class="admin-input">
+                                                </div>
+                                                <div class="flex-1">
+                                                    <label class="admin-label">Value</label>
+                                                    <input type="number" step="0.1" x-model.number="form.series[0].data[index]" class="admin-input">
+                                                </div>
+                                                <button @click="form.categories.splice(index, 1); form.series[0].data.splice(index, 1)" class="p-2 text-red-500 hover:bg-red-500/10 rounded mt-4">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                                </button>
+                                            </div>
+                                        </template>
+                                        <button @click="form.categories.push('New Label'); form.series[0].data.push(0)" class="w-full py-2 border-2 border-dashed border-white/10 rounded-xl text-arbitra-gray hover:border-arbitra-emerald hover:text-white transition-all font-bold text-xs uppercase">+ Add Data Point</button>
+                                    </div>
                                 </div>
                             @endif
                         </div>

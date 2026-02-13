@@ -7,6 +7,7 @@ use App\Http\Controllers\AdminController;
 
 Route::get('/', [PublicController::class, 'index']);
 Route::post('/contact', [PublicController::class, 'submitContactForm']);
+Route::get('/download-profile/{year}', [PublicController::class, 'downloadPdf']);
 
 Route::prefix('admin')->group(function () {
     Route::get('/', [AdminController::class, 'index']);

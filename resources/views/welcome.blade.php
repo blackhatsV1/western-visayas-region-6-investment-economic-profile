@@ -742,7 +742,7 @@
                         <button @click="contactOpen = true; contactSuccess = false" class="bg-arbitra-emerald text-arbitra-black px-12 py-5 rounded-full font-black text-lg uppercase tracking-widest hover:scale-105 transition shadow-[0_0_50px_rgba(16,185,129,0.3)]">
                             Contact DTI Region 6
                         </button>
-                        <a href="{{ asset('Western_Visayas_Investment_Profile.pdf') }}" download class="bg-white/5 text-white border border-white/10 px-12 py-5 rounded-full font-black text-lg uppercase tracking-widest hover:bg-white/10 transition inline-block">
+                        <a href="/download-profile/2024-2025" class="bg-white/5 text-white border border-white/10 px-12 py-5 rounded-full font-black text-lg uppercase tracking-widest hover:bg-white/10 transition inline-block">
                             Download Profile PDF
                         </a>
                     </div>
