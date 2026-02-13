@@ -147,8 +147,12 @@
         document.addEventListener('alpine:init', () => {
             Alpine.data('app', () => ({
                 modalOpen: false, 
+                contactOpen: false,
                 modalTitle: '', 
                 modalContent: {},
+                contactForm: { name: '', email: '', contact: '', message: '' },
+                contactLoading: false,
+                contactSuccess: false,
                 map: null,
                 init() {
                     this.$watch('modalOpen', value => {
@@ -212,6 +216,33 @@
                     if (bounds.length > 0) {
                         this.map.fitBounds(bounds, { padding: [50, 50] });
                     }
+                },
+                async submitInquiry() {
+                    this.contactLoading = true;
+                    try {
+                        const response = await fetch('/contact', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            },
+                            body: JSON.stringify(this.contactForm)
+                        });
+                        const data = await response.json();
+                        if (data.success) {
+                            this.contactSuccess = true;
+                            this.contactForm = { name: '', email: '', contact: '', message: '' };
+                            if (data.mailto) {
+                                window.location.href = data.mailto;
+                            }
+                        } else {
+                            alert(data.message || 'Error sending inquiry');
+                        }
+                    } catch (e) {
+                        alert('Connect Error: Failed to send inquiry');
+                    } finally {
+                        this.contactLoading = false;
+                    }
                 }
             }));
         });
@@ -243,7 +274,7 @@
                 @endforeach
             </div>
 
-            <button class="bg-arbitra-emerald text-arbitra-black px-6 py-2.5 rounded-full font-black text-xs uppercase tracking-widest hover:brightness-110 transition shadow-[0_0_30px_rgba(16,185,129,0.2)]">
+            <button @click="contactOpen = true; contactSuccess = false" class="bg-arbitra-emerald text-arbitra-black px-6 py-2.5 rounded-full font-black text-xs uppercase tracking-widest hover:brightness-110 transition shadow-[0_0_30px_rgba(16,185,129,0.2)]">
                 Connect Now
             </button>
         </div>
@@ -708,12 +739,12 @@
                         Join over 85,000 thriving businesses. DTI Region 6 is ready to provide the collaborative environment and strategic support your expansion needs.
                     </p>
                     <div class="flex flex-col md:flex-row items-center justify-center gap-6">
-                        <button class="bg-arbitra-emerald text-arbitra-black px-12 py-5 rounded-full font-black text-lg uppercase tracking-widest hover:scale-105 transition shadow-[0_0_50px_rgba(16,185,129,0.3)]">
+                        <button @click="contactOpen = true; contactSuccess = false" class="bg-arbitra-emerald text-arbitra-black px-12 py-5 rounded-full font-black text-lg uppercase tracking-widest hover:scale-105 transition shadow-[0_0_50px_rgba(16,185,129,0.3)]">
                             Contact DTI Region 6
                         </button>
-                        <button class="bg-white/5 text-white border border-white/10 px-12 py-5 rounded-full font-black text-lg uppercase tracking-widest hover:bg-white/10 transition">
+                        <a href="{{ asset('Western_Visayas_Investment_Profile.pdf') }}" download class="bg-white/5 text-white border border-white/10 px-12 py-5 rounded-full font-black text-lg uppercase tracking-widest hover:bg-white/10 transition inline-block">
                             Download Profile PDF
-                        </button>
+                        </a>
                     </div>
                 </div>
             </section>
@@ -809,6 +840,78 @@
             document.getElementById("scroll-progress").style.width = scrolled + "%";
         };
     </script>
+
+    <!-- Connect with Us Modal -->
+    <div x-show="contactOpen" 
+         x-cloak
+         class="fixed inset-0 z-50 flex items-center justify-center px-6"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+        
+        <div class="absolute inset-0 bg-arbitra-black/98 backdrop-blur-3xl" @click="contactOpen = false"></div>
+        
+        <div class="relative bg-arbitra-dark max-w-lg w-full p-12 rounded-[2.5rem] border border-white/10 shadow-[0_30px_100px_rgba(0,0,0,0.8)]"
+             x-transition:enter="transition ease-out duration-500 transform scale-95 opacity-0"
+             x-transition:enter-end="scale-100 opacity-100"
+             x-transition:leave="transition ease-in duration-300 transform scale-95 opacity-0">
+            
+            <button @click="contactOpen = false" class="absolute top-8 right-8 text-arbitra-gray hover:text-white transition-all transform hover:rotate-90">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+
+            <template x-if="!contactSuccess">
+                <div>
+                    <h3 class="text-3xl font-extrabold text-white tracking-tighter mb-4 uppercase italic">Connect with Us</h3>
+                    <p class="text-arbitra-gray mb-8 text-sm">Fill out the form below and the DTI Region 6 team will get back to you shortly.</p>
+                    
+                    <form @submit.prevent="submitInquiry" class="space-y-6">
+                        <div>
+                            <label class="block text-[10px] font-black text-arbitra-emerald uppercase tracking-[0.2em] mb-2">Full Name</label>
+                            <input type="text" x-model="contactForm.name" required class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-arbitra-emerald outline-none transition uppercase text-xs font-bold">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black text-arbitra-emerald uppercase tracking-[0.2em] mb-2">Email Address</label>
+                            <input type="email" x-model="contactForm.email" required class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-arbitra-emerald outline-none transition text-xs font-bold">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black text-arbitra-emerald uppercase tracking-[0.2em] mb-2">Contact Number</label>
+                            <input type="text" x-model="contactForm.contact" required class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-arbitra-emerald outline-none transition text-xs font-bold">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black text-arbitra-emerald uppercase tracking-[0.2em] mb-2">Message</label>
+                            <textarea x-model="contactForm.message" required rows="4" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-arbitra-emerald outline-none transition text-xs font-bold" placeholder="Please send as a message"></textarea>
+                        </div>
+
+                        <div class="pt-4">
+                            <button type="submit" :disabled="contactLoading" class="w-full bg-arbitra-emerald text-arbitra-black font-black py-4 rounded-xl hover:brightness-110 transition disabled:opacity-50 uppercase tracking-widest text-xs">
+                                <span x-show="!contactLoading">SEND INQUIRY</span>
+                                <span x-show="contactLoading">SENDING...</span>
+                            </button>
+                        </div>
+                        
+                        <p class="text-[10px] text-arbitra-gray text-center leading-relaxed">
+                            <span class="font-bold text-white/40">PRIVACY POLICY:</span> By submitting this form, you agree to the collection and processing of your personal information by DTI Region 6 for the purpose of addressing your investment inquiry. Your data will be handled in accordance with the Data Privacy Act of 2012.
+                        </p>
+                    </form>
+                </div>
+            </template>
+
+            <template x-if="contactSuccess">
+                <div class="text-center py-10">
+                    <div class="w-20 h-20 bg-arbitra-emerald/20 rounded-full flex items-center justify-center mx-auto mb-8">
+                        <svg class="w-10 h-10 text-arbitra-emerald" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                    </div>
+                    <h3 class="text-2xl font-black text-white mb-4 uppercase italic">Thank You!</h3>
+                    <p class="text-arbitra-gray mb-8">Your inquiry has been sent to DTI Region 6. We will contact you soon via the details provided.</p>
+                    <button @click="contactOpen = false" class="bg-white/10 text-white px-8 py-3 rounded-full font-bold hover:bg-white/20 transition uppercase text-xs tracking-widest">Close</button>
+                </div>
+            </template>
+        </div>
+    </div>
 
 </body>
 </html>

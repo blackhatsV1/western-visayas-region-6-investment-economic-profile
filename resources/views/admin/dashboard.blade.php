@@ -295,6 +295,50 @@
             </div>
 
         </div>
+
+        <!-- Inquiries Section -->
+        <section id="section-inquiries" class="max-w-[1240px] mx-auto bento-card p-12 mt-16 bg-gradient-to-br from-arbitra-emerald/5 to-transparent border-arbitra-emerald/10">
+            <div class="flex justify-between items-center mb-10">
+                <h2 class="text-3xl font-black uppercase tracking-tight italic">Investor Inquiries</h2>
+                <span class="bg-arbitra-emerald/10 text-arbitra-emerald px-4 py-1.5 rounded-full text-[10px] font-black uppercase">{{ $inquiries->count() }} RECEIVED</span>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-white/5">
+                            <th class="pb-4 text-[10px] font-black uppercase text-arbitra-gray tracking-widest">Date</th>
+                            <th class="pb-4 text-[10px] font-black uppercase text-arbitra-gray tracking-widest">Investor</th>
+                            <th class="pb-4 text-[10px] font-black uppercase text-arbitra-gray tracking-widest">Contact</th>
+                            <th class="pb-4 text-[10px] font-black uppercase text-arbitra-gray tracking-widest">Message</th>
+                            <th class="pb-4 text-[10px] font-black uppercase text-arbitra-gray tracking-widest text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-white/5">
+                        @forelse($inquiries as $inquiry)
+                            <tr class="group hover:bg-white/[0.02] transition-colors">
+                                <td class="py-6 text-xs font-medium text-arbitra-gray">{{ $inquiry->created_at->format('M d, Y') }}</td>
+                                <td class="py-6">
+                                    <div class="text-sm font-bold text-white">{{ $inquiry->name }}</div>
+                                    <div class="text-[10px] text-arbitra-gray">{{ $inquiry->email }}</div>
+                                </td>
+                                <td class="py-6 text-xs text-arbitra-gray">{{ $inquiry->contact }}</td>
+                                <td class="py-6 text-xs text-white max-w-xs truncate" title="{{ $inquiry->message }}">{{ $inquiry->message }}</td>
+                                <td class="py-6 text-right">
+                                    <button @click="deleteInquiry({{ $inquiry->id }})" class="text-arbitra-gray hover:text-red-500 transition-all">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                    </button>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5" class="py-20 text-center text-arbitra-gray uppercase text-[10px] font-black tracking-[0.2em] italic">No inquiries received yet</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </section>
     </main>
 
     <!-- Add Year Modal -->
@@ -413,6 +457,17 @@
                     } catch (e) {
                         alert('Error creating section');
                     }
+                },
+
+                async deleteInquiry(id) {
+                    if (!confirm('Delete this inquiry record?')) return;
+                    try {
+                        const response = await fetch(`/admin/inquiry/${id}`, {
+                            method: 'DELETE',
+                            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+                        });
+                        if (response.ok) window.location.reload();
+                    } catch (e) { alert('Error deleting inquiry'); }
                 }
             }
         }

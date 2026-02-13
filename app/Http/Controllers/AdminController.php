@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\ProjectContent;
+use App\Models\Inquiry;
 use App\Exports\ProjectContentExport;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -20,7 +21,9 @@ class AdminController extends Controller
         }
         sort($years);
 
-        return view('admin.dashboard', compact('contents', 'selectedYear', 'years'));
+        $inquiries = Inquiry::latest()->get();
+
+        return view('admin.dashboard', compact('contents', 'selectedYear', 'years', 'inquiries'));
     }
 
     public function update(Request $request, ProjectContent $content)
@@ -80,6 +83,12 @@ class AdminController extends Controller
     public function destroyYear($year)
     {
         ProjectContent::where('year_range', $year)->delete();
+        return response()->json(['success' => true]);
+    }
+
+    public function destroyInquiry(Inquiry $inquiry)
+    {
+        $inquiry->delete();
         return response()->json(['success' => true]);
     }
 }

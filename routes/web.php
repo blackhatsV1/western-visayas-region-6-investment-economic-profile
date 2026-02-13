@@ -6,6 +6,7 @@ use App\Http\Controllers\PublicController;
 use App\Http\Controllers\AdminController;
 
 Route::get('/', [PublicController::class, 'index']);
+Route::post('/contact', [PublicController::class, 'submitContactForm']);
 
 Route::prefix('admin')->group(function () {
     Route::get('/', [AdminController::class, 'index']);
@@ -15,4 +16,5 @@ Route::prefix('admin')->group(function () {
     Route::patch('/content/{content}', [AdminController::class, 'update']);
     Route::delete('/content/{content}', [AdminController::class, 'destroy']);
     Route::delete('/year/{year}', [AdminController::class, 'destroyYear']);
+    Route::delete('/inquiry/{inquiry}', [AdminController::class, 'destroyInquiry']);
 });
